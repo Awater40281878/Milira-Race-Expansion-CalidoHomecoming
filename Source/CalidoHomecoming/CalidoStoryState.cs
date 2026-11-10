@@ -51,6 +51,11 @@ namespace CalidoHomecoming
         private int activeCampaignResolveTick = -1;
         private bool activeCampaignHumane;
         private bool activeCampaignCombat;
+        private int activeMissionSiteId = -1;
+        private int activeMissionDeadlineTick = -1;
+        private int humanitarianChoices;
+        private int hardlineChoices;
+        private List<int> recoveredEvidence = new List<int>();
         private bool calidoTechUnlocked;
         private bool cultResurrectionUnlocked;
         private bool returningLanternGranted;
@@ -576,9 +581,25 @@ namespace CalidoHomecoming
 
         private void TickExtendedCampaign()
         {
+            recoveredEvidence ??= new List<int>();
             if (!chapterOneComplete || campaignBeat >= CalidoCampaignContent.Beats.Length || campaignWindowOpen || Find.TickManager == null || Find.AnyPlayerHomeMap == null) return;
             if (activeCampaignBeat >= 0)
             {
+                if (activeMissionSiteId >= 0)
+                {
+                    WorldObject site = Find.WorldObjects.AllWorldObjects.FirstOrDefault(o => o.ID == activeMissionSiteId);
+                    if (site != null)
+                    {
+                        if (Find.TickManager.TicksGame >= activeMissionDeadlineTick)
+                        {
+                            FailCampaignBeat(site);
+                        }
+                        return;
+                    }
+                    if (!recoveredEvidence.Contains(activeCampaignBeat)) recoveredEvidence.Add(activeCampaignBeat);
+                    activeMissionSiteId = -1;
+                    activeMissionDeadlineTick = -1;
+                }
                 if (Find.TickManager.TicksGame < activeCampaignResolveTick) return;
                 if (activeCampaignBeat == 5 && CountPlayerBuildings("Calido_GroundSignalBeacon") < 3)
                 {
@@ -616,11 +637,9 @@ namespace CalidoHomecoming
             campaignWindowOpen = false;
             activeCampaignCombat = IsCombatBeat(campaignBeat);
             activeCampaignResolveTick = (Find.TickManager?.TicksGame ?? 0) + (humane ? 60000 : 30000);
-            if (activeCampaignCombat)
+            if (NeedsMissionSite(campaignBeat))
             {
-                string faction = campaignBeat <= 3 ? "Calido_SlaveCaravan" : campaignBeat >= 16 ? "Calido_FallenCult" : "Calido_BanditCompanies";
-                TriggerRaid(faction);
-                Find.LetterStack.ReceiveLetter("行動開始：" + beat.Title, "敵對部隊已被引出。守住南渡並清除仍有戰鬥能力的敵人後，任務才會結算。", LetterDefOf.ThreatBig);
+                CreateMissionSite(beat);
             }
             else
             {
@@ -630,6 +649,68 @@ namespace CalidoHomecoming
                 if (campaignBeat == 5)
                     Find.LetterStack.ReceiveLetter("建設目標：三座地面航標塔", "從「雜項」建造三座地面航標塔。每座需要80鋼與2個零件；在三座都完工以前，任務不會自動結算。", LetterDefOf.PositiveEvent);
             }
+        }
+
+        private static bool NeedsMissionSite(int beat)
+        {
+            return beat == 0 || beat == 1 || beat == 2 || beat == 3 || beat == 4 || beat == 6 || beat == 15 || beat == 16 || beat == 17 || beat == 18;
+        }
+
+        private void CreateMissionSite(CampaignBeat beat)
+        {
+            string factionName = campaignBeat <= 3 ? "Calido_SlaveCaravan" : campaignBeat >= 16 ? "Calido_FallenCult" : "Calido_BanditCompanies";
+            if (campaignBeat == 15) factionName = "Mechanoid";
+            Faction faction = Find.FactionManager.AllFactions.FirstOrDefault(f => f.def.defName == factionName);
+            WorldObjectDef def = DefDatabase<WorldObjectDef>.GetNamedSilentFail("Calido_MissionSite");
+            if (faction == null || def == null)
+            {
+                TriggerRaid(factionName);
+                return;
+            }
+            CalidoMissionSite site = (CalidoMissionSite)WorldObjectMaker.MakeWorldObject(def);
+            site.campaignBeat = campaignBeat;
+            site.SetFaction(faction);
+            site.Name = beat.Title;
+            site.Tile = TileFinder.RandomSettlementTileFor(faction, true, null);
+            Find.WorldObjects.Add(site);
+            activeMissionSiteId = site.ID;
+            activeMissionDeadlineTick = Find.TickManager.TicksGame + (activeCampaignHumane ? 900000 : 600000);
+            Find.LetterStack.ReceiveLetter("任務地點已標記：" + beat.Title,
+                "世界地圖上已出現「" + beat.Title + "」。派遣隊伍前往、取得密封證物並完成撤離。期限為 " + (activeCampaignHumane ? "15" : "10") + " 天；超時會失去證詞與對應好感。", LetterDefOf.ThreatBig, site);
+        }
+
+        private void FailCampaignBeat(WorldObject site)
+        {
+            CampaignBeat beat = CalidoCampaignContent.Beats[activeCampaignBeat];
+            site.Destroy();
+            activeMissionSiteId = -1;
+            activeMissionDeadlineTick = -1;
+            activeCampaignBeat = -1;
+            activeCampaignCombat = false;
+            campaignNextTick = Find.TickManager.TicksGame + 60000;
+            Faction guild = Find.FactionManager.AllFactions.FirstOrDefault(f => f.def.defName == "Calido_AdventurersGuild");
+            guild?.TryAffectGoodwillWith(Faction.OfPlayer, -8, false, false, null, null);
+            Find.LetterStack.ReceiveLetter(beat.Title + "失敗", "任務期限已過，目標撤離並帶走了證物。冒險者公會對南渡的信任降低；你可在一天後重新接下此任務。", LetterDefOf.NegativeEvent);
+        }
+
+        public void PopulateMissionSite(CalidoMissionSite site, Map map)
+        {
+            if (site == null || map == null || site.campaignBeat < 0) return;
+            ThingDef evidence = DefDatabase<ThingDef>.GetNamedSilentFail("Calido_MissionEvidence");
+            if (evidence != null) GenSpawn.Spawn(ThingMaker.MakeThing(evidence), CellFinder.RandomClosewalkCellNear(map.Center, map, 12), map);
+
+            if (site.campaignBeat != 15) return;
+            string[] bossKinds = { "Milian_Mechanoid_KnightIV", "Milian_Mechanoid_BishopIV", "Milian_Mechanoid_RookIV" };
+            string[] bossNames = { "戰爭女皇・無訊", "懲戒女皇・斷鏈", "瘟疫女皇・靜潮" };
+            for (int i = 0; i < bossKinds.Length; i++)
+            {
+                PawnKindDef kind = DefDatabase<PawnKindDef>.GetNamedSilentFail(bossKinds[i]);
+                if (kind == null) continue;
+                Pawn boss = PawnGenerator.GeneratePawn(new PawnGenerationRequest(kind, Faction.OfMechanoids));
+                boss.Name = new NameSingle(bossNames[i]);
+                GenSpawn.Spawn(boss, CellFinder.RandomClosewalkCellNear(map.Center, map, 18), map);
+            }
+            Find.LetterStack.ReceiveLetter("三機生物現身", "米莉安授權地點已生成三隻特殊機械生物：無訊、斷鏈、靜潮。清除據點並撤離後，才能取得米莉安授權證物。", LetterDefOf.ThreatBig, site);
         }
 
         private static int CountPlayerBuildings(string defName)
@@ -645,6 +726,29 @@ namespace CalidoHomecoming
 
         private void ResolveCampaignBeat(CampaignBeat beat, bool humane)
         {
+            if (campaignBeat >= 8 && campaignBeat <= 11 && recoveredEvidence.Count < 2)
+            {
+                activeCampaignBeat = -1;
+                activeCampaignCombat = false;
+                campaignNextTick = (Find.TickManager?.TicksGame ?? 0) + 60000;
+                Find.LetterStack.ReceiveLetter("聽證會延期", "現有證物不足以支撐地面證詞。請先完成世界地圖上的任務地點並帶回至少兩份密封證物。", LetterDefOf.NegativeEvent);
+                return;
+            }
+
+            if (humane)
+            {
+                humanitarianChoices++;
+                AffectFaction("Calido_AdventurersGuild", 4);
+                AffectFaction("Calido_MiliraChurch", 3);
+                AffectFaction("Calido_SlaveCaravan", -2);
+            }
+            else
+            {
+                hardlineChoices++;
+                AffectFaction("Calido_AdventurersGuild", -2);
+                AffectFaction("Calido_MiliraChurch", -2);
+                AffectFaction("Calido_BanditCompanies", -1);
+            }
             RecruitHero(beat);
             campaignBeat++;
             campaignWindowOpen = false;
@@ -656,7 +760,10 @@ namespace CalidoHomecoming
             {
                 cultResurrectionUnlocked = true;
                 GrantReturningLantern();
-                Find.LetterStack.ReceiveLetter("主線完成：歸航不是歸順", "偽神諭的原稿已公開，地面證詞被卡利多正式承認。你可以往返天空與地面，高階科技授權已開放；白羽聖堂承認主角一直攜帶的渡口長槍正是神器的未覺醒形態。讓主角親自裝備一把渡口長槍，它將唯一一次進化為「歸燈」。邪教烙印則留下了一次以昏迷為代價的復生能力。", LetterDefOf.PositiveEvent);
+                string ending = humanitarianChoices >= hardlineChoices
+                    ? "地面證詞被卡利多正式承認。你以救援與公開記錄取得了較完整的民用授權。"
+                    : "地面證詞被卡利多正式承認，但強硬手段留下了裂痕；太空商會將要求額外的授權研究成本。";
+                Find.LetterStack.ReceiveLetter("主線完成：歸航不是歸順", ending + "你可以往返天空與地面，高階科技授權已開放；白羽聖堂承認主角一直攜帶的渡口長槍正是神器的未覺醒形態。讓主角親自裝備一把渡口長槍，它將唯一一次進化為「歸燈」。邪教烙印則留下了一次以昏迷為代價的復生能力。", LetterDefOf.PositiveEvent);
             }
             else
             {
@@ -675,6 +782,12 @@ namespace CalidoHomecoming
             HediffDef specialty = DefDatabase<HediffDef>.GetNamedSilentFail(beat.Specialty);
             if (specialty != null) pawn.health.AddHediff(specialty);
             GenSpawn.Spawn(pawn, CellFinder.RandomClosewalkCellNear(map.Center, map, 10), map);
+        }
+
+        private static void AffectFaction(string defName, int goodwill)
+        {
+            Faction faction = Find.FactionManager.AllFactions.FirstOrDefault(f => f.def.defName == defName);
+            faction?.TryAffectGoodwillWith(Faction.OfPlayer, goodwill, false, false, null, null);
         }
 
         private static void ApplyHeroProfile(Pawn pawn, string title)
@@ -1054,6 +1167,11 @@ namespace CalidoHomecoming
             Scribe_Values.Look(ref activeCampaignResolveTick, "activeCampaignResolveTick", -1);
             Scribe_Values.Look(ref activeCampaignHumane, "activeCampaignHumane", false);
             Scribe_Values.Look(ref activeCampaignCombat, "activeCampaignCombat", false);
+            Scribe_Values.Look(ref activeMissionSiteId, "activeMissionSiteId", -1);
+            Scribe_Values.Look(ref activeMissionDeadlineTick, "activeMissionDeadlineTick", -1);
+            Scribe_Values.Look(ref humanitarianChoices, "humanitarianChoices", 0);
+            Scribe_Values.Look(ref hardlineChoices, "hardlineChoices", 0);
+            Scribe_Collections.Look(ref recoveredEvidence, "recoveredEvidence", LookMode.Value);
             Scribe_Values.Look(ref calidoTechUnlocked, "calidoTechUnlocked", false);
             Scribe_Values.Look(ref cultResurrectionUnlocked, "cultResurrectionUnlocked", false);
             Scribe_Values.Look(ref returningLanternGranted, "returningLanternGranted", false);

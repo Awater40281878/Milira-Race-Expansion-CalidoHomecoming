@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <WorldObjectDef ParentName="Settlement">
+    <defName>Calido_MissionSite</defName>
+    <label>劇情任務地點</label>
+    <description>卡利多歸航主線的臨時任務地點。完成目標、取走證物並撤離後，地點會從世界地圖移除。</description>
+    <worldObjectClass>CalidoHomecoming.CalidoMissionSite</worldObjectClass>
+  </WorldObjectDef>
+</Defs>
