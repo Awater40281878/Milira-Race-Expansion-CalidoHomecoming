@@ -38,6 +38,7 @@ namespace CalidoHomecoming
         private int messagePostQuestStartTick = -1;
         private bool groundWorldSanitized;
         private bool miliraDiplomacyInitialized;
+        private bool factionDiplomacyInitialized;
         private int chapterOneStep;
         private int chapterOneNextTick = -1;
         private bool chapterOneWindowOpen;
@@ -117,6 +118,7 @@ namespace CalidoHomecoming
 
             SanitizeGroundWorld();
             InitializeMiliraDiplomacy();
+            InitializeFactionDiplomacy();
             TickCultDiplomacy();
             EnsureAuthorizationBlueprints();
             EnsureStartingReachSpear();
@@ -204,9 +206,8 @@ namespace CalidoHomecoming
             }
 
             FactionDef miliraDef = DefDatabase<FactionDef>.GetNamedSilentFail("Milira_Faction");
-            Faction miliraFaction = miliraDef == null
-                ? null
-                : Find.FactionManager.AllFactions.FirstOrDefault(f => f.def == miliraDef);
+            Faction miliraFaction = Find.FactionManager.AllFactions.FirstOrDefault(f => f.def.defName == "Calido_OrbitalMilira")
+                ?? (miliraDef == null ? null : Find.FactionManager.AllFactions.FirstOrDefault(f => f.def == miliraDef));
             if (miliraFaction == null)
             {
                 return;
@@ -215,7 +216,7 @@ namespace CalidoHomecoming
             // Milira Race normally treats every faction except Milira_PlayerFaction
             // as a permanent enemy. This scenario is intentionally multi-racial, so
             // the ordinary player faction receives an exception without replacing it.
-            if (miliraDef.permanentEnemyToEveryoneExcept != null &&
+            if (miliraDef?.permanentEnemyToEveryoneExcept != null &&
                 !miliraDef.permanentEnemyToEveryoneExcept.Contains(Faction.OfPlayer.def))
             {
                 miliraDef.permanentEnemyToEveryoneExcept.Add(Faction.OfPlayer.def);
@@ -232,7 +233,82 @@ namespace CalidoHomecoming
             miliraFaction.SetRelationDirect(Faction.OfPlayer, FactionRelationKind.Neutral);
             Faction.OfPlayer.SetRelationDirect(miliraFaction, FactionRelationKind.Neutral);
             miliraDiplomacyInitialized = true;
-            Log.Message("[卡利多歸航] 米莉拉母城與玩家的初始外交已改為中立；第四章聽證會前不會自動結盟。");
+            Log.Message("[卡利多歸航] 卡利多天控城與玩家的初始外交已改為中立；登城前仍無法直接聯絡。");
+        }
+
+        private void InitializeFactionDiplomacy()
+        {
+            if (factionDiplomacyInitialized || Faction.OfPlayer == null || Find.FactionManager == null) return;
+
+            // Player-facing relations are deterministic; the cult is changed later by its arc.
+            SetPlayerRelation("Calido_AdventurersGuild", FactionRelationKind.Ally);
+            SetPlayerRelation("Calido_MiliraChurch", FactionRelationKind.Ally);
+            SetPlayerRelation("Calido_MihoKingdom", FactionRelationKind.Neutral);
+            SetPlayerRelation("Calido_KiiroKingdom", FactionRelationKind.Neutral);
+            SetPlayerRelation("Calido_WolfeinKingdom", FactionRelationKind.Neutral);
+            SetPlayerRelation("Calido_AxolotlRiverfolk", FactionRelationKind.Neutral);
+            SetPlayerRelation("Calido_OrbitalMilira", FactionRelationKind.Neutral);
+            SetPlayerRelation("Calido_OrbitalTradeConsortium", FactionRelationKind.Neutral);
+            SetPlayerRelation("Calido_FallenCult", FactionRelationKind.Neutral);
+            SetPlayerRelation("Calido_SlaveCaravan", FactionRelationKind.Hostile);
+            SetPlayerRelation("Calido_BanditCompanies", FactionRelationKind.Hostile);
+            SetPlayerRelation("Calido_OrbitalPirates", FactionRelationKind.Hostile);
+            SetPlayerRelation("Mechanoid", FactionRelationKind.Hostile);
+            SetPlayerRelation("Insect", FactionRelationKind.Hostile);
+
+            string[] kingdoms = { "Calido_MihoKingdom", "Calido_KiiroKingdom", "Calido_WolfeinKingdom", "Calido_AxolotlRiverfolk" };
+            for (int i = 0; i < kingdoms.Length; i++)
+            {
+                SetFactionRelation("Calido_AdventurersGuild", kingdoms[i], FactionRelationKind.Ally);
+                SetFactionRelation("Calido_MiliraChurch", kingdoms[i], FactionRelationKind.Ally);
+                for (int j = i + 1; j < kingdoms.Length; j++) SetFactionRelation(kingdoms[i], kingdoms[j], FactionRelationKind.Neutral);
+            }
+
+            SetFactionRelation("Calido_AdventurersGuild", "Calido_MiliraChurch", FactionRelationKind.Ally);
+            SetFactionRelation("Calido_AdventurersGuild", "Calido_SlaveCaravan", FactionRelationKind.Hostile);
+            SetFactionRelation("Calido_AdventurersGuild", "Calido_BanditCompanies", FactionRelationKind.Hostile);
+            SetFactionRelation("Calido_AdventurersGuild", "Calido_FallenCult", FactionRelationKind.Hostile);
+            SetFactionRelation("Calido_MiliraChurch", "Calido_SlaveCaravan", FactionRelationKind.Hostile);
+            SetFactionRelation("Calido_MiliraChurch", "Calido_BanditCompanies", FactionRelationKind.Hostile);
+            SetFactionRelation("Calido_MiliraChurch", "Calido_FallenCult", FactionRelationKind.Hostile);
+            foreach (string kingdom in kingdoms)
+            {
+                SetFactionRelation(kingdom, "Calido_SlaveCaravan", FactionRelationKind.Hostile);
+                SetFactionRelation(kingdom, "Calido_BanditCompanies", FactionRelationKind.Hostile);
+                SetFactionRelation(kingdom, "Calido_FallenCult", FactionRelationKind.Neutral);
+            }
+            SetFactionRelation("Calido_SlaveCaravan", "Calido_BanditCompanies", FactionRelationKind.Neutral);
+            SetFactionRelation("Calido_SlaveCaravan", "Calido_FallenCult", FactionRelationKind.Neutral);
+            SetFactionRelation("Calido_BanditCompanies", "Calido_FallenCult", FactionRelationKind.Neutral);
+
+            SetFactionRelation("Calido_OrbitalMilira", "Calido_OrbitalTradeConsortium", FactionRelationKind.Ally);
+            SetFactionRelation("Calido_OrbitalMilira", "Calido_OrbitalPirates", FactionRelationKind.Hostile);
+            SetFactionRelation("Calido_OrbitalTradeConsortium", "Calido_OrbitalPirates", FactionRelationKind.Hostile);
+            foreach (string surfaceFaction in kingdoms.Concat(new[] { "Calido_AdventurersGuild", "Calido_MiliraChurch", "Calido_SlaveCaravan", "Calido_BanditCompanies", "Calido_FallenCult" }))
+            {
+                SetFactionRelation("Calido_OrbitalTradeConsortium", surfaceFaction, FactionRelationKind.Neutral);
+                SetFactionRelation("Calido_OrbitalPirates", surfaceFaction, FactionRelationKind.Hostile);
+            }
+
+            factionDiplomacyInitialized = true;
+            Log.Message("[卡利多歸航] 已套用地面與軌道陣營外交矩陣。密教會在偽神諭案推進後對玩家轉為敵對。");
+        }
+
+        private static void SetPlayerRelation(string factionDefName, FactionRelationKind relation)
+        {
+            Faction faction = Find.FactionManager.AllFactions.FirstOrDefault(f => f.def.defName == factionDefName);
+            if (faction == null || faction == Faction.OfPlayer) return;
+            faction.SetRelationDirect(Faction.OfPlayer, relation);
+            Faction.OfPlayer.SetRelationDirect(faction, relation);
+        }
+
+        private static void SetFactionRelation(string firstDefName, string secondDefName, FactionRelationKind relation)
+        {
+            Faction first = Find.FactionManager.AllFactions.FirstOrDefault(f => f.def.defName == firstDefName);
+            Faction second = Find.FactionManager.AllFactions.FirstOrDefault(f => f.def.defName == secondDefName);
+            if (first == null || second == null || first == second) return;
+            first.SetRelationDirect(second, relation);
+            second.SetRelationDirect(first, relation);
         }
 
         private void TickCultDiplomacy()
@@ -967,6 +1043,7 @@ namespace CalidoHomecoming
             Scribe_Values.Look(ref messagePostQuestStartTick, "messagePostQuestStartTick", -1);
             Scribe_Values.Look(ref groundWorldSanitized, "groundWorldSanitized", false);
             Scribe_Values.Look(ref miliraDiplomacyInitialized, "miliraDiplomacyInitialized", false);
+            Scribe_Values.Look(ref factionDiplomacyInitialized, "factionDiplomacyInitialized", false);
             Scribe_Values.Look(ref chapterOneStep, "chapterOneStep", 0);
             Scribe_Values.Look(ref chapterOneNextTick, "chapterOneNextTick", -1);
             Scribe_Values.Look(ref firstHeroRecruited, "firstHeroRecruited", false);

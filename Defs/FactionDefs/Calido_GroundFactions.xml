@@ -64,4 +64,93 @@
     <canStageAttacks>false</canStageAttacks>
     <leaderTitle>蝕經主祭</leaderTitle>
   </FactionDef>
+
+  <!-- Each installed ground race receives one story-controlled kingdom.  The
+       scenario generator suppresses its original alternate factions. -->
+  <FactionDef ParentName="OutlanderFactionBase">
+    <defName>Calido_MihoKingdom</defName>
+    <label>美狐月紋諸侯國</label>
+    <description>以月祭、商路與祖靈契約維繫的美狐城邦。地面章節只生成這一個美狐政治勢力。</description>
+    <requiredCountAtGameStart>0</requiredCountAtGameStart>
+    <maxConfigurableAtWorldCreation>1</maxConfigurableAtWorldCreation>
+    <configurationListOrderPriority>89</configurationListOrderPriority>
+    <leaderTitle>月紋侯</leaderTitle>
+  </FactionDef>
+
+  <FactionDef ParentName="OutlanderFactionBase">
+    <defName>Calido_KiiroKingdom</defName>
+    <label>綺羅林地共同體</label>
+    <description>由貓耳綺羅族的林地村落、紙坊與旅隊組成的共同體。地面章節只生成這一個綺羅勢力。</description>
+    <requiredCountAtGameStart>0</requiredCountAtGameStart>
+    <maxConfigurableAtWorldCreation>1</maxConfigurableAtWorldCreation>
+    <configurationListOrderPriority>88</configurationListOrderPriority>
+    <leaderTitle>林地記錄官</leaderTitle>
+  </FactionDef>
+
+  <FactionDef ParentName="OutlanderFactionBase">
+    <defName>Calido_WolfeinKingdom</defName>
+    <label>沃芬邊境聯盟</label>
+    <description>以邊境工坊、哨站與運輸線組成的沃芬聯盟。地面章節只生成這一個沃芬勢力。</description>
+    <requiredCountAtGameStart>0</requiredCountAtGameStart>
+    <maxConfigurableAtWorldCreation>1</maxConfigurableAtWorldCreation>
+    <configurationListOrderPriority>87</configurationListOrderPriority>
+    <leaderTitle>邊境總監</leaderTitle>
+  </FactionDef>
+
+  <FactionDef ParentName="OutlanderFactionBase">
+    <defName>Calido_AxolotlRiverfolk</defName>
+    <label>萌螈河灣船隊</label>
+    <description>沿河灣行走、以水燈與藥草維繫的萌螈船隊。地面章節只生成這一個萌螈勢力。</description>
+    <requiredCountAtGameStart>0</requiredCountAtGameStart>
+    <maxConfigurableAtWorldCreation>1</maxConfigurableAtWorldCreation>
+    <configurationListOrderPriority>86</configurationListOrderPriority>
+    <leaderTitle>船隊領航者</leaderTitle>
+  </FactionDef>
+
+  <!-- Orbit factions are real diplomatic entities but deliberately have no
+       surface settlement, visitor, raid, or trade route before their chapter. -->
+  <FactionDef ParentName="OutlanderFactionBase">
+    <defName>Calido_OrbitalTradeConsortium</defName>
+    <label>太空商會</label>
+    <fixedName>太空商會</fixedName>
+    <description>在近地航道上營運的商會。尚未取得軌道許可前，地面無法觀測或聯絡他們。</description>
+    <hidden>true</hidden>
+    <requiredCountAtGameStart>0</requiredCountAtGameStart>
+    <settlementGenerationWeight>0</settlementGenerationWeight>
+    <raidsForbidden>true</raidsForbidden>
+    <canMakeRandomly>false</canMakeRandomly>
+    <canSiege>false</canSiege>
+    <canStageAttacks>false</canStageAttacks>
+    <leaderTitle>航路監理</leaderTitle>
+  </FactionDef>
+
+  <FactionDef ParentName="PirateBandBase">
+    <defName>Calido_OrbitalPirates</defName>
+    <label>太空海盜</label>
+    <fixedName>太空海盜</fixedName>
+    <description>潛伏於軌道殘骸帶的掠奪者。未解鎖太空章節前，他們不會進入地面事件池。</description>
+    <hidden>true</hidden>
+    <requiredCountAtGameStart>0</requiredCountAtGameStart>
+    <settlementGenerationWeight>0</settlementGenerationWeight>
+    <raidsForbidden>true</raidsForbidden>
+    <canMakeRandomly>false</canMakeRandomly>
+    <canSiege>false</canSiege>
+    <canStageAttacks>false</canStageAttacks>
+    <leaderTitle>船長</leaderTitle>
+  </FactionDef>
+
+  <FactionDef ParentName="OutlanderFactionBase">
+    <defName>Calido_OrbitalMilira</defName>
+    <label>卡利多天控城</label>
+    <fixedName>卡利多天控城</fixedName>
+    <description>米莉拉的軌道母城。它存在於這個世界的外交資料中，但在取得登城權以前沒有可見據點、無法通訊，也不會派遣地表單位。</description>
+    <hidden>true</hidden>
+    <requiredCountAtGameStart>0</requiredCountAtGameStart>
+    <settlementGenerationWeight>0</settlementGenerationWeight>
+    <raidsForbidden>true</raidsForbidden>
+    <canMakeRandomly>false</canMakeRandomly>
+    <canSiege>false</canSiege>
+    <canStageAttacks>false</canStageAttacks>
+    <leaderTitle>天控議長</leaderTitle>
+  </FactionDef>
 </Defs>

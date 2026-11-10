@@ -28,7 +28,8 @@ namespace CalidoHomecoming
             string[] groundFactions =
             {
                 "Calido_AdventurersGuild", "Calido_SlaveCaravan", "Calido_BanditCompanies",
-                "Calido_MiliraChurch", "Calido_FallenCult"
+                "Calido_MiliraChurch", "Calido_FallenCult", "Calido_MihoKingdom",
+                "Calido_KiiroKingdom", "Calido_WolfeinKingdom", "Calido_AxolotlRiverfolk"
             };
             int inserted = 0;
             foreach (string factionName in groundFactions)
