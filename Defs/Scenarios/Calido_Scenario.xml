@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <ScenPartDef>
+    <defName>CalidoStoryStart</defName>
+    <label>卡利多歸航劇情</label>
+    <category>Fixed</category>
+    <scenPartClass>CalidoHomecoming.ScenPart_CalidoStory</scenPartClass>
+    <summaryPriority>900</summaryPriority>
+    <canBeRandomlyAdded>false</canBeRandomlyAdded>
+    <canBePlayerAddedRemoved>false</canBePlayerAddedRemoved>
+  </ScenPartDef>
+
+  <ScenPartDef>
+    <defName>CalidoConfigurePawnsKindDefs</defName>
+    <label>卡利多歸航起始角色</label>
+    <scenPartClass>ScenPart_ConfigPage_ConfigureStartingPawns_KindDefs</scenPartClass>
+    <pageClass>Page_ConfigureStartingPawns</pageClass>
+    <summaryPriority>500</summaryPriority>
+    <category>Fixed</category>
+    <selectionWeight>0</selectionWeight>
+    <canBeRandomlyAdded>false</canBeRandomlyAdded>
+    <canBePlayerAddedRemoved>false</canBePlayerAddedRemoved>
+  </ScenPartDef>
+
+  <ScenarioDef ParentName="ScenarioBase">
+    <defName>CalidoHomecomingScenario</defName>
+    <label>卡利多歸航：借來的名字</label>
+    <description>一名失去卡利多聯絡與高階裝備的米莉拉來到地面。普通居民把白翼視為神蹟，也有人想利用這份信仰。地面由冒險者公會、鎖鏈商路、荒路強盜、白羽聖堂、蝕羽密教及各族原生王國共同角力；世界上不會存在米莉拉地面據點。</description>
+    <scenario>
+      <summary>從地面開始的米莉拉長篇劇本。序幕、留言冊與任務進度只會在此劇本中啟動。</summary>
+      <parts>
+        <li Class="ScenPart_ConfigPage_ConfigureStartingPawns_KindDefs">
+          <def>CalidoConfigurePawnsKindDefs</def>
+          <pawnChoiceCount>6</pawnChoiceCount>
+          <leftBehindPawnKind>Milira_Colonist</leftBehindPawnKind>
+          <kindCounts>
+            <li>
+              <kindDef>Milira_Colonist</kindDef>
+              <count>1</count>
+              <requiredAtStart>true</requiredAtStart>
+            </li>
+          </kindCounts>
+        </li>
+        <li Class="ScenPart_PlayerPawnsArriveMethod">
+          <def>PlayerPawnsArriveMethod</def>
+          <visible>false</visible>
+          <method>Standing</method>
+        </li>
+        <li Class="ScenPart_StartingThing_Defined"><def>StartingThing_Defined</def><thingDef>MealSurvivalPack</thingDef><count>24</count></li>
+        <li Class="ScenPart_StartingThing_Defined"><def>StartingThing_Defined</def><thingDef>MedicineIndustrial</thingDef><count>10</count></li>
+        <li Class="ScenPart_StartingThing_Defined"><def>StartingThing_Defined</def><thingDef>Silver</thingDef><count>300</count></li>
+        <li Class="ScenPart_StartingThing_Defined"><def>StartingThing_Defined</def><thingDef>Gun_Revolver</thingDef></li>
+        <li Class="ScenPart_StartingThing_Defined"><def>StartingThing_Defined</def><thingDef>MeleeWeapon_Knife</thingDef><stuff>Steel</stuff></li>
+        <li Class="ScenPart_ScatterThingsNearPlayerStart"><def>ScatterThingsNearPlayerStart</def><thingDef>WoodLog</thingDef><count>180</count></li>
+        <li Class="ScenPart_ScatterThingsNearPlayerStart"><def>ScatterThingsNearPlayerStart</def><thingDef>Steel</thingDef><count>120</count></li>
+        <li Class="CalidoHomecoming.ScenPart_CalidoStory">
+          <def>CalidoStoryStart</def>
+        </li>
+      </parts>
+    </scenario>
+  </ScenarioDef>
+</Defs>

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <ThingDef ParentName="BuildingBase">
+    <defName>Calido_MessagePost</defName>
+    <label>南渡留言柱</label>
+    <description>一座遮雨的木製留言柱。識字者能留下完整委託，不識字的人也能請記錄員代寫。它是地面消息流動的起點，不具備任何卡利多科技。</description>
+    <thingClass>Building</thingClass>
+    <graphicData>
+      <texPath>Things/Building/Furniture/ShelfSmall</texPath>
+      <graphicClass>Graphic_Multi</graphicClass>
+      <drawSize>(1,1)</drawSize>
+    </graphicData>
+    <size>(1,1)</size>
+    <altitudeLayer>Building</altitudeLayer>
+    <passability>PassThroughOnly</passability>
+    <pathCost>20</pathCost>
+    <fillPercent>0.25</fillPercent>
+    <rotatable>true</rotatable>
+    <useHitPoints>true</useHitPoints>
+    <statBases>
+      <MaxHitPoints>120</MaxHitPoints>
+      <WorkToBuild>1800</WorkToBuild>
+      <Mass>18</Mass>
+      <Flammability>1.0</Flammability>
+      <Beauty>1</Beauty>
+    </statBases>
+    <costList>
+      <WoodLog>40</WoodLog>
+    </costList>
+    <designationCategory>Misc</designationCategory>
+    <designationHotKey>Misc7</designationHotKey>
+    <minifiedDef>MinifiedThing</minifiedDef>
+    <thingCategories>
+      <li>BuildingsMisc</li>
+    </thingCategories>
+    <constructionSkillPrerequisite>0</constructionSkillPrerequisite>
+    <building>
+      <destroySound>BuildingDestroyed_Wood_Small</destroySound>
+      <isInert>true</isInert>
+    </building>
+  </ThingDef>
+  <ThingDef ParentName="BuildingBase">
+    <defName>Calido_GroundSignalBeacon</defName>
+    <label>地面航標塔</label>
+    <description>用銅線、反光板與普通蓄電元件拼成的低科技航標。它不能聯絡卡利多，只能反覆發送可由天空辨識的地面座標。第三章需要在殖民地建成三座。</description>
+    <thingClass>Building</thingClass>
+    <graphicData><texPath>Things/Building/Misc/CommsConsole</texPath><graphicClass>Graphic_Multi</graphicClass><drawSize>(2,2)</drawSize></graphicData>
+    <size>(2,2)</size><altitudeLayer>Building</altitudeLayer><passability>PassThroughOnly</passability><fillPercent>0.3</fillPercent><rotatable>true</rotatable><useHitPoints>true</useHitPoints>
+    <statBases><MaxHitPoints>180</MaxHitPoints><WorkToBuild>3600</WorkToBuild><Mass>45</Mass><Flammability>0.4</Flammability><Beauty>-1</Beauty></statBases>
+    <costList><Steel>80</Steel><ComponentIndustrial>2</ComponentIndustrial></costList>
+    <designationCategory>Misc</designationCategory><minifiedDef>MinifiedThing</minifiedDef>
+    <thingCategories><li>BuildingsMisc</li></thingCategories><constructionSkillPrerequisite>4</constructionSkillPrerequisite>
+    <building><destroySound>BuildingDestroyed_Metal_Medium</destroySound><isInert>true</isInert></building>
+  </ThingDef>
+</Defs>

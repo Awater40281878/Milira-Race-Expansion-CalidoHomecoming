@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+  <!-- An invisible, very fast projectile lets the vanilla hunting and drafted
+       ranged-job systems understand a polearm thrust. It is not a bullet: the
+       4.9-cell range represents the wielder advancing and extending the spear. -->
+  <ThingDef ParentName="BaseBullet">
+    <defName>Calido_Projectile_ReachThrust</defName>
+    <label>長槍延伸刺擊</label>
+    <graphicData>
+      <texPath>Things/Projectile/ReachThrust</texPath>
+      <graphicClass>Graphic_Single</graphicClass>
+      <shaderType>Transparent</shaderType>
+    </graphicData>
+    <projectile>
+      <damageDef>RangedStab</damageDef>
+      <damageAmountBase>9</damageAmountBase>
+      <armorPenetrationBase>0.16</armorPenetrationBase>
+      <stoppingPower>0.6</stoppingPower>
+      <speed>200</speed>
+    </projectile>
+  </ThingDef>
+
+  <ThingDef ParentName="BaseWeapon">
+    <defName>Calido_ReachSpear</defName>
+    <label>渡口長槍</label>
+    <description>一把在地面重新裝柄的普通長槍。沒有神力、卡利多接口或特殊材料，只因槍桿較長而能隔著數步刺擊獵物。可使用木材、金屬或其他相容材料製作；它不會因風吹雨淋而腐朽，但仍可能在戰鬥中損壞。</description>
+    <graphicData>
+      <texPath>Things/Item/Equipment/WeaponMelee/FerrySpear</texPath>
+      <graphicClass>Graphic_Single</graphicClass>
+      <drawSize>(1.5,1.5)</drawSize>
+    </graphicData>
+    <techLevel>Neolithic</techLevel>
+    <useHitPoints>true</useHitPoints>
+    <smeltable>true</smeltable>
+    <burnableByRecipe>false</burnableByRecipe>
+    <equippedAngleOffset>-25</equippedAngleOffset>
+    <thingCategories><li>WeaponsMelee</li></thingCategories>
+    <weaponClasses><li>Melee</li><li>MeleePiercer</li><li>Ranged</li></weaponClasses>
+    <weaponTags><li>Spear</li><li>Calido_GroundWeapon</li></weaponTags>
+    <statBases>
+      <MarketValue>85</MarketValue>
+      <MaxHitPoints>240</MaxHitPoints>
+      <Mass>2.4</Mass>
+      <DeteriorationRate>0</DeteriorationRate>
+      <Flammability>0</Flammability>
+      <AccuracyTouch>0.96</AccuracyTouch>
+      <AccuracyShort>0.88</AccuracyShort>
+      <AccuracyMedium>0.55</AccuracyMedium>
+      <AccuracyLong>0.20</AccuracyLong>
+      <RangedWeapon_Cooldown>2.1</RangedWeapon_Cooldown>
+      <WorkToMake>9000</WorkToMake>
+    </statBases>
+    <costStuffCount>75</costStuffCount>
+    <stuffCategories><li>Woody</li><li>Metallic</li></stuffCategories>
+    <costList><Cloth>10</Cloth></costList>
+    <recipeMaker>
+      <workSpeedStat>GeneralLaborSpeed</workSpeedStat><workSkill>Crafting</workSkill>
+      <effectWorking>Smith</effectWorking><soundWorking>Recipe_Smith</soundWorking>
+      <recipeUsers><li>FueledSmithy</li><li>ElectricSmithy</li></recipeUsers>
+      <unfinishedThingDef>UnfinishedWeapon</unfinishedThingDef>
+      <researchPrerequisite>LongBlades</researchPrerequisite>
+      <skillRequirements><Crafting>4</Crafting></skillRequirements>
+      <displayPriority>335</displayPriority>
+    </recipeMaker>
+    <verbs>
+      <li>
+        <verbClass>Verb_Shoot</verbClass>
+        <hasStandardCommand>true</hasStandardCommand>
+        <defaultProjectile>Calido_Projectile_ReachThrust</defaultProjectile>
+        <warmupTime>0.55</warmupTime>
+        <minRange>1.5</minRange>
+        <range>4.9</range>
+      </li>
+    </verbs>
+    <tools>
+      <li>
+        <label>槍桿</label><capacities><li>Blunt</li><li>Poke</li></capacities>
+        <power>6</power><stuffEffectMultiplier>0.25</stuffEffectMultiplier><cooldownTime>2.3</cooldownTime>
+      </li>
+      <li>
+        <label>槍尖</label><capacities><li>Stab</li></capacities>
+        <power>13</power><stuffEffectMultiplier>0.45</stuffEffectMultiplier><armorPenetration>0.22</armorPenetration><cooldownTime>2.1</cooldownTime>
+      </li>
+    </tools>
+  </ThingDef>
+</Defs>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <TraitDef>
+    <defName>Calido_ProtagonistAura</defName>
+    <label>主角光環</label>
+    <description>[PAWN_nameDef]是《借來的名字》選中的主角。即使卡利多的訊號已斷，這份意志仍使[PAWN_objective]較能承受疼痛、加快建立免疫力，並讓旁人更容易相信[PAWN_objective]的話。</description>
+    <commonality>0</commonality>
+    <allowOnHostileSpawn>false</allowOnHostileSpawn>
+    <degreeDatas>
+      <li>
+        <label>主角光環</label>
+        <description>[PAWN_nameDef]是《借來的名字》選中的主角。即使卡利多的訊號已斷，這份意志仍使[PAWN_objective]較能承受疼痛、加快建立免疫力，並讓旁人更容易相信[PAWN_objective]的話。</description>
+        <statOffsets>
+          <PainShockThreshold>0.15</PainShockThreshold>
+          <ImmunityGainSpeed>0.20</ImmunityGainSpeed>
+          <SocialImpact>0.25</SocialImpact>
+        </statOffsets>
+      </li>
+    </degreeDatas>
+  </TraitDef>
+</Defs>

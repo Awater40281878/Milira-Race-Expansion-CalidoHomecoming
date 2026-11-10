@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+  <ResearchProjectDef>
+    <defName>Calido_Blueprint_Civilian</defName><label>授權藍圖：卡利多民用系統</label>
+    <description>由卡利多聽證機構簽發的特殊藍圖。沒有這份授權，地面研究員只能看見加密接口，無法研究米莉拉高階生產、能源與運輸科技。此藍圖只能由第五章任務取得。</description>
+    <baseCost>1</baseCost><techLevel>Ultra</techLevel><techprintCount>1</techprintCount><techprintCommonality>0</techprintCommonality><techprintMarketValue>0</techprintMarketValue><heldByFactionCategoryTags><li>CalidoStoryOnly</li></heldByFactionCategoryTags>
+    <researchViewX>0</researchViewX><researchViewY>4.2</researchViewY><tab>Milira_ResearchTab</tab>
+  </ResearchProjectDef>
+  <ResearchProjectDef>
+    <defName>Calido_Blueprint_Armor</defName><label>授權藍圖：卡利多個人防具</label>
+    <description>包含戰鬥服、力場與高階防護材料的校準密鑰。只能在第五章通過地面戰鬥紀錄審核後取得。</description>
+    <baseCost>1</baseCost><techLevel>Ultra</techLevel><techprintCount>1</techprintCount><techprintCommonality>0</techprintCommonality><techprintMarketValue>0</techprintMarketValue><heldByFactionCategoryTags><li>CalidoStoryOnly</li></heldByFactionCategoryTags>
+    <researchViewX>1</researchViewX><researchViewY>4.2</researchViewY><tab>Milira_ResearchTab</tab>
+  </ResearchProjectDef>
+  <ResearchProjectDef>
+    <defName>Calido_Blueprint_Weapons</defName><label>授權藍圖：卡利多武器系統</label>
+    <description>包含離子、光束、磁軌及動力近戰武器的安全校準。只能在第五章證明地面盟友的獨立軍法地位後取得。</description>
+    <baseCost>1</baseCost><techLevel>Ultra</techLevel><techprintCount>1</techprintCount><techprintCommonality>0</techprintCommonality><techprintMarketValue>0</techprintMarketValue><heldByFactionCategoryTags><li>CalidoStoryOnly</li></heldByFactionCategoryTags>
+    <researchViewX>2</researchViewX><researchViewY>4.2</researchViewY><tab>Milira_ResearchTab</tab>
+  </ResearchProjectDef>
+  <ResearchProjectDef MayRequire="Ludeon.RimWorld.Biotech">
+    <defName>Calido_Blueprint_Milian</defName><label>授權藍圖：米莉安指揮權</label>
+    <description>不是製造圖，而是一份可撤銷的指揮憑證。它解鎖米莉安充能、培育、工作與戰鬥權限，只能在第五章完成機械生物來源調查後取得。</description>
+    <baseCost>1</baseCost><techLevel>Ultra</techLevel><techprintCount>1</techprintCount><techprintCommonality>0</techprintCommonality><techprintMarketValue>0</techprintMarketValue><heldByFactionCategoryTags><li>CalidoStoryOnly</li></heldByFactionCategoryTags>
+    <researchViewX>3</researchViewX><researchViewY>4.2</researchViewY><tab>Milira_ResearchTab</tab>
+  </ResearchProjectDef>
+</Defs>

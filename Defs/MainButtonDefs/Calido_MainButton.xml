@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <MainButtonDef>
+    <defName>Calido_MessageBoard</defName>
+    <label>南渡留言冊</label>
+    <description>查看卡利多歸航的章節、留言與任務。</description>
+    <tabWindowClass>CalidoHomecoming.MainTabWindow_MessageBoard</tabWindowClass>
+    <workerClass>CalidoHomecoming.MainButtonWorker_CalidoMessageBoard</workerClass>
+    <order>91</order>
+    <buttonVisible>true</buttonVisible>
+    <validWithoutMap>true</validWithoutMap>
+    <minimized>true</minimized>
+  </MainButtonDef>
+</Defs>

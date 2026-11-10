@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ModMetaData>
+  <name>卡利多歸航</name>
+  <author>Asuisui</author>
+  <packageId>asuisui.calidohomecoming</packageId>
+  <supportedVersions>
+    <li>1.6</li>
+  </supportedVersions>
+  <description>米莉拉大型地面劇情擴充。從南渡留言冊開始，經歷居民的神明誤解、冒險者公會委託、英雄招募、強盜交涉、奴隸商路與卡利多失聯調查，逐步前往天空母城。</description>
+  <modDependencies>
+    <li>
+      <packageId>brrainz.harmony</packageId>
+      <displayName>Harmony</displayName>
+      <steamWorkshopUrl>steam://url/CommunityFilePage/2009463077</steamWorkshopUrl>
+    </li>
+    <li>
+      <packageId>erdelf.HumanoidAlienRaces</packageId>
+      <displayName>Humanoid Alien Races</displayName>
+      <steamWorkshopUrl>steam://url/CommunityFilePage/839005762</steamWorkshopUrl>
+    </li>
+    <li>
+      <packageId>Ancot.MiliraRace</packageId>
+      <displayName>Milira Race</displayName>
+      <steamWorkshopUrl>steam://url/CommunityFilePage/3256974620</steamWorkshopUrl>
+    </li>
+  </modDependencies>
+  <loadAfter>
+    <li>brrainz.harmony</li>
+    <li>erdelf.HumanoidAlienRaces</li>
+    <li>Ancot.MiliraRace</li>
+  </loadAfter>
+</ModMetaData>

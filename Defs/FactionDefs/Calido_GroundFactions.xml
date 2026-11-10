@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+  <!-- All pawn pools remain terrestrial and contain no Milira pawn kinds. -->
+  <FactionDef ParentName="OutlanderFactionBase">
+    <defName>Calido_AdventurersGuild</defName>
+    <label>冒險者公會</label>
+    <description>由各地旅人、傭兵、獵人與學者組成的跨國組織。公會接受委託、發布懸賞，也會派遣收押隊向聚落收購已確認身分的罪犯。少數地面米莉拉可能以個人身分加入，但公會沒有卡利多裝備的供應管道。</description>
+    <colorSpectrum><li>(0.20, 0.42, 0.62)</li><li>(0.34, 0.58, 0.76)</li></colorSpectrum>
+    <requiredCountAtGameStart>0</requiredCountAtGameStart>
+    <maxConfigurableAtWorldCreation>1</maxConfigurableAtWorldCreation>
+    <configurationListOrderPriority>94</configurationListOrderPriority>
+    <naturalEnemy>false</naturalEnemy>
+    <canSiege>false</canSiege>
+    <canStageAttacks>false</canStageAttacks>
+    <leaderTitle>總會長</leaderTitle>
+  </FactionDef>
+
+  <FactionDef ParentName="OutlanderRoughBase">
+    <defName>Calido_SlaveCaravan</defName>
+    <label>鎖鏈商路</label>
+    <description>由武裝商隊、押運站與地下拍賣場構成的奴隸商人網路。他們的軍隊比強盜正規，襲擊頻率較低，通常會先要求贖金、俘虜或通行權；受害者以亞人為主，也包括少數人類婦女與孩童。</description>
+    <colorSpectrum><li>(0.34, 0.18, 0.12)</li><li>(0.50, 0.28, 0.16)</li></colorSpectrum>
+    <requiredCountAtGameStart>0</requiredCountAtGameStart>
+    <maxConfigurableAtWorldCreation>1</maxConfigurableAtWorldCreation>
+    <configurationListOrderPriority>93</configurationListOrderPriority>
+    <leaderTitle>商路監領</leaderTitle>
+  </FactionDef>
+
+  <FactionDef ParentName="PirateBandBase">
+    <defName>Calido_BanditCompanies</defName>
+    <label>荒路強盜</label>
+    <description>盤據古道、渡口與廢棄堡壘的鬆散匪幫。他們通常會在交戰前提出條件，但要求往往刻意超出聚落能承受的範圍。</description>
+    <colorSpectrum><li>(0.48, 0.10, 0.08)</li><li>(0.68, 0.18, 0.10)</li></colorSpectrum>
+    <requiredCountAtGameStart>0</requiredCountAtGameStart>
+    <maxConfigurableAtWorldCreation>1</maxConfigurableAtWorldCreation>
+    <configurationListOrderPriority>92</configurationListOrderPriority>
+    <leaderTitle>大頭領</leaderTitle>
+  </FactionDef>
+
+  <FactionDef ParentName="OutlanderFactionBase">
+    <defName>Calido_MiliraChurch</defName>
+    <label>白羽聖堂</label>
+    <description>由地面各族信徒建立的米莉拉教會。他們將從天而降的白翼旅人視為神使或神明，教團本身卻沒有米莉拉成員。聖堂也保管著一件只有米莉拉才能完全喚醒的冷兵器神器。</description>
+    <colorSpectrum><li>(0.82, 0.78, 0.58)</li><li>(0.94, 0.90, 0.72)</li></colorSpectrum>
+    <requiredCountAtGameStart>0</requiredCountAtGameStart>
+    <maxConfigurableAtWorldCreation>1</maxConfigurableAtWorldCreation>
+    <configurationListOrderPriority>91</configurationListOrderPriority>
+    <naturalEnemy>false</naturalEnemy>
+    <canSiege>false</canSiege>
+    <canStageAttacks>false</canStageAttacks>
+    <leaderTitle>大司祭</leaderTitle>
+  </FactionDef>
+
+  <FactionDef ParentName="OutlanderRoughBase">
+    <defName>Calido_FallenCult</defName>
+    <label>蝕羽密教</label>
+    <description>將墜落、傷痕與復生奉為啟示的地下教會。成員來自多個種族，正常情況下不包含米莉拉；只有極少數被稱為墮落天使的異常個體藏身其中。密教會隨支線推進才逐步發動襲擊。</description>
+    <colorSpectrum><li>(0.24, 0.08, 0.28)</li><li>(0.42, 0.12, 0.46)</li></colorSpectrum>
+    <requiredCountAtGameStart>0</requiredCountAtGameStart>
+    <maxConfigurableAtWorldCreation>1</maxConfigurableAtWorldCreation>
+    <configurationListOrderPriority>90</configurationListOrderPriority>
+    <naturalEnemy>true</naturalEnemy>
+    <canSiege>false</canSiege>
+    <canStageAttacks>false</canStageAttacks>
+    <leaderTitle>蝕經主祭</leaderTitle>
+  </FactionDef>
+</Defs>

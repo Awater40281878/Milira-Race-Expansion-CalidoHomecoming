@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+  <ThingDef ParentName="BaseWeapon">
+    <defName>Calido_ReturningLantern</defName>
+    <label>歸燈</label>
+    <description>白羽聖堂保存的唯一神器。一柄帶有崩口的單刃長柄薙刀，木柄纏著舊麻繩，柄尾嵌有被磨平的渡口銅印。它無法製造、沒有耐久度；只有米莉拉能喚醒全部力量。</description>
+    <graphicData>
+      <texPath>Things/Item/Equipment/WeaponMelee/ReturningLantern</texPath>
+      <graphicClass>Graphic_Single</graphicClass>
+      <!-- Match Milira's native long-pole weapon scale. The source texture is
+           512x512 and fills the diagonal canvas like Lance/Spear. -->
+      <drawSize>(1.5,1.5)</drawSize>
+    </graphicData>
+    <techLevel>Medieval</techLevel>
+    <uiIconScale>1.35</uiIconScale>
+    <equippedAngleOffset>35</equippedAngleOffset>
+    <useHitPoints>false</useHitPoints>
+    <smeltable>false</smeltable>
+    <burnableByRecipe>false</burnableByRecipe>
+    <thingCategories><li>WeaponsMelee</li></thingCategories>
+    <weaponClasses><li>Melee</li><li>MeleePiercer</li></weaponClasses>
+    <selectable>true</selectable>
+    <weaponTags><li>Calido_UniqueArtifact</li></weaponTags>
+    <statBases>
+      <MarketValue>4200</MarketValue><Mass>3.6</Mass><Flammability>0</Flammability><DeteriorationRate>0</DeteriorationRate><MeleeWeapon_AverageDPS>16</MeleeWeapon_AverageDPS><MeleeWeapon_CooldownMultiplier>0.78</MeleeWeapon_CooldownMultiplier>
+    </statBases>
+    <tools>
+      <li><label>刃</label><capacities><li>Cut</li></capacities><power>28</power><cooldownTime>1.65</cooldownTime><armorPenetration>0.46</armorPenetration></li>
+      <li><label>柄</label><capacities><li>Blunt</li></capacities><power>12</power><cooldownTime>1.8</cooldownTime></li>
+    </tools>
+  </ThingDef>
+</Defs>
