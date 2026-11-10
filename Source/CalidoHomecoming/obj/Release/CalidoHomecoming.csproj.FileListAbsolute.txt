@@ -1,0 +1,7 @@
+D:\Program Files (x86)\Steam\steamapps\common\RimWorld\Mods\CalidoHomecoming\Source\CalidoHomecoming\obj\Release\CalidoHomecoming.csproj.AssemblyReference.cache
+D:\Program Files (x86)\Steam\steamapps\common\RimWorld\Mods\CalidoHomecoming\Source\CalidoHomecoming\obj\Release\CalidoHomecoming.GeneratedMSBuildEditorConfig.editorconfig
+D:\Program Files (x86)\Steam\steamapps\common\RimWorld\Mods\CalidoHomecoming\Source\CalidoHomecoming\obj\Release\CalidoHomecoming.csproj.CoreCompileInputs.cache
+D:\Program Files (x86)\Steam\steamapps\common\RimWorld\Mods\CalidoHomecoming\Assemblies\CalidoHomecoming.dll
+D:\Program Files (x86)\Steam\steamapps\common\RimWorld\Mods\CalidoHomecoming\Assemblies\CalidoHomecoming.pdb
+D:\Program Files (x86)\Steam\steamapps\common\RimWorld\Mods\CalidoHomecoming\Source\CalidoHomecoming\obj\Release\CalidoHomecoming.dll
+D:\Program Files (x86)\Steam\steamapps\common\RimWorld\Mods\CalidoHomecoming\Source\CalidoHomecoming\obj\Release\CalidoHomecoming.pdb
