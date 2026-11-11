@@ -69,10 +69,30 @@ namespace CalidoHomecoming
         private int nextCrossRaceEventTick = -1;
         private bool crossRaceEventWindowOpen;
         private int nextGuildPrisonerVisitTick = -1;
+        private int nextSlaveCaravanEncounterTick = -1;
         private bool guildPrisonerWindowOpen;
         private bool cultActivated;
         private bool cultDiplomacyInitialized;
+        private int rescuedCaptives;
+        private int recruitedCaptives;
+        private int aidedCaptives;
+        private int slaveCaravanNotoriety;
+        private int nextSlaveRetaliationTick = -1;
+        private List<string> heroQueue = new List<string>();
+        private int evidenceId = -1;
+        private bool reachedSkyPort;
+        private bool missionRescue;
+        public void NotifyLanding(Pawn traveler)
+        {
+            if (traveler.thingIDNumber == protagonistId) reachedSkyPort = true;
+        }
+        private string pendingHeroPersonalName;
+        private int pendingHeroPersonalTick = -1;
+        private bool heroPersonalWindowOpen;
+        private List<string> completedHeroPersonalLines = new List<string>();
         private bool startingReachSpearGranted;
+        private bool protagonistDeathLocked;
+        private bool protagonistDeathAcknowledged;
 
         public CalidoStoryState(Game game)
         {
@@ -99,6 +119,9 @@ namespace CalidoHomecoming
         public bool CivilianBlueprintUnlocked => BlueprintFinished("Calido_Blueprint_Civilian");
         public bool MilianBlueprintUnlocked => DefDatabase<ResearchProjectDef>.GetNamedSilentFail("Calido_Blueprint_Milian") == null || BlueprintFinished("Calido_Blueprint_Milian");
         public int CrossRaceEventsSeen => crossRaceEventsSeen?.Count ?? 0;
+        public int RescuedCaptives => rescuedCaptives;
+        public int SlaveCaravanNotoriety => slaveCaravanNotoriety;
+        public int HeroPersonalLinesCompleted => completedHeroPersonalLines?.Count ?? 0;
 
         public override void StartedNewGame()
         {
@@ -121,6 +144,12 @@ namespace CalidoHomecoming
                 return;
             }
 
+            if (protagonistDeathLocked)
+            {
+                if (TryRestoreAfterResurrection()) return;
+                return;
+            }
+
             SanitizeGroundWorld();
             InitializeMiliraDiplomacy();
             InitializeFactionDiplomacy();
@@ -138,6 +167,9 @@ namespace CalidoHomecoming
             TickFallenResurrection();
             TickCrossRaceEvents();
             TickGuildPrisonerBuyer();
+            TickTravelingSlaveCaravan();
+            TickSlaveCaravanRetaliation();
+            TickHeroPersonalLine();
 
             if (prologueComplete || prologueQueued || Find.TickManager == null)
             {
@@ -235,8 +267,7 @@ namespace CalidoHomecoming
                 return;
             }
 
-            miliraFaction.SetRelationDirect(Faction.OfPlayer, FactionRelationKind.Neutral);
-            Faction.OfPlayer.SetRelationDirect(miliraFaction, FactionRelationKind.Neutral);
+            ApplyRelation(miliraFaction, Faction.OfPlayer, FactionRelationKind.Neutral);
             miliraDiplomacyInitialized = true;
             Log.Message("[卡利多歸航] 卡利多天控城與玩家的初始外交已改為中立；登城前仍無法直接聯絡。");
         }
@@ -303,8 +334,7 @@ namespace CalidoHomecoming
         {
             Faction faction = Find.FactionManager.AllFactions.FirstOrDefault(f => f.def.defName == factionDefName);
             if (faction == null || faction == Faction.OfPlayer) return;
-            faction.SetRelationDirect(Faction.OfPlayer, relation);
-            Faction.OfPlayer.SetRelationDirect(faction, relation);
+            ApplyRelation(faction, Faction.OfPlayer, relation);
         }
 
         private static void SetFactionRelation(string firstDefName, string secondDefName, FactionRelationKind relation)
@@ -312,8 +342,19 @@ namespace CalidoHomecoming
             Faction first = Find.FactionManager.AllFactions.FirstOrDefault(f => f.def.defName == firstDefName);
             Faction second = Find.FactionManager.AllFactions.FirstOrDefault(f => f.def.defName == secondDefName);
             if (first == null || second == null || first == second) return;
+            ApplyRelation(first, second, relation);
+        }
+
+        private static void ApplyRelation(Faction first, Faction second, FactionRelationKind relation)
+        {
+            if (first.RelationKindWith(second) == relation) return;
+            if (first.HasGoodwill && second.HasGoodwill)
+            {
+                int target = relation == FactionRelationKind.Ally ? 100 : relation == FactionRelationKind.Hostile ? -100 : 0;
+                first.TryAffectGoodwillWith(second, target - first.GoodwillWith(second), false, false);
+                return;
+            }
             first.SetRelationDirect(second, relation);
-            second.SetRelationDirect(first, relation);
         }
 
         private void TickCultDiplomacy()
@@ -323,10 +364,9 @@ namespace CalidoHomecoming
             if (cult == null) return;
             if (!cultActivated && campaignBeat < 16)
             {
-                if (!cultDiplomacyInitialized || cult.HostileTo(Faction.OfPlayer))
+                if (!cultDiplomacyInitialized || (Find.TickManager.TicksGame % 2500 == 0 && cult.HostileTo(Faction.OfPlayer)))
                 {
-                    cult.SetRelationDirect(Faction.OfPlayer, FactionRelationKind.Neutral);
-                    Faction.OfPlayer.SetRelationDirect(cult, FactionRelationKind.Neutral);
+                    ApplyRelation(cult, Faction.OfPlayer, FactionRelationKind.Neutral);
                     cultDiplomacyInitialized = true;
                 }
                 return;
@@ -334,8 +374,7 @@ namespace CalidoHomecoming
             if (!cultActivated && campaignBeat >= 16)
             {
                 cultActivated = true;
-                cult.SetRelationDirect(Faction.OfPlayer, FactionRelationKind.Hostile);
-                Faction.OfPlayer.SetRelationDirect(cult, FactionRelationKind.Hostile);
+                ApplyRelation(cult, Faction.OfPlayer, FactionRelationKind.Hostile);
                 Find.LetterStack.ReceiveLetter("蝕羽密教公開敵對", "你開始追查抄經所後，密教不再維持表面中立。從現在起，他們會出現在正常襲擊池中，且仍會先依地面交涉規則提出條件。", LetterDefOf.ThreatBig);
             }
         }
@@ -382,10 +421,37 @@ namespace CalidoHomecoming
             ThingWithComps oldWeapon = protagonist.equipment.Primary;
             if (oldWeapon != null)
                 protagonist.equipment.TryDropEquipment(oldWeapon, out _, protagonist.Position, forbid: false);
-            protagonist.equipment.AddEquipment((ThingWithComps)ThingMaker.MakeThing(spearDef));
+            protagonist.equipment.AddEquipment((ThingWithComps)ThingMaker.MakeThing(spearDef, ThingDefOf.Steel));
             protagonistId = protagonist.thingIDNumber;
             startingReachSpearGranted = true;
             Messages.Message("主角裝備了普通地面武器「渡口長槍」。它能在4.9格內延伸刺擊，也可用於狩獵。", protagonist, MessageTypeDefOf.PositiveEvent, false);
+        }
+
+        public void NotifyProtagonistDeath(Pawn pawn)
+        {
+            if (!scenarioEnabled || protagonistDeathLocked || pawn == null) return;
+            if (protagonistId < 0) return;
+            if (pawn.thingIDNumber != protagonistId) return;
+            protagonistDeathLocked = true;
+            protagonistDeathAcknowledged = false;
+            Find.TickManager?.Pause();
+            Find.WindowStack.Add(new Dialog_ProtagonistDeath(this));
+        }
+
+        public void AcknowledgeProtagonistDeath()
+        {
+            protagonistDeathAcknowledged = true;
+            Find.LetterStack.ReceiveLetter("天命暫停", "主角的屍體仍是讓世界恢復的唯一鑰匙。只要設法復活主角，劇情、授權與任務系統就會自動恢復；在此之前大部分內容都會停在原地。", LetterDefOf.ThreatBig);
+        }
+
+        private bool TryRestoreAfterResurrection()
+        {
+            Pawn restored = PawnsFinder.AllMapsCaravansAndTravellingTransporters_Alive_FreeColonists.FirstOrDefault(p => p.thingIDNumber == protagonistId && !p.Dead);
+            if (restored == null) return false;
+            protagonistDeathLocked = false;
+            protagonistDeathAcknowledged = false;
+            Find.LetterStack.ReceiveLetter("天命續行", "主角已被復活。南渡的任務、授權與世界事件重新開始運作。", LetterDefOf.PositiveEvent, restored);
+            return true;
         }
 
         private void EnsureProtagonistAura()
@@ -403,10 +469,6 @@ namespace CalidoHomecoming
                 Messages.Message("主角獲得特質「主角光環」：忍痛、免疫力與魅力提高。", protagonist, MessageTypeDefOf.PositiveEvent, false);
             }
 
-            ThoughtDef auraMood = DefDatabase<ThoughtDef>.GetNamedSilentFail("Calido_ProtagonistAuraMood");
-            var memories = protagonist.needs?.mood?.thoughts?.memories;
-            if (auraMood != null && memories != null && memories.NumMemoriesOfDef(auraMood) == 0)
-                memories.TryGainMemory(auraMood);
         }
 
         private void TickMessagePostQuest()
@@ -537,6 +599,7 @@ namespace CalidoHomecoming
                 }
                 GenSpawn.Spawn(pawn, CellFinder.RandomClosewalkCellNear(map.Center, map, 8), map);
                 firstHeroRecruited = true;
+                QueueHeroPersonalLine("伊蕾希雅");
             }
             AdvanceChapter("伊蕾希雅把地圖釘在留言柱背面。她是第一位加入南渡的米莉拉英雄，也是卡利多失聯並非孤例的第一份證據。" );
         }
@@ -587,8 +650,10 @@ namespace CalidoHomecoming
             {
                 if (activeMissionSiteId >= 0)
                 {
+                    if (Find.TickManager.TicksGame % 120 != 0) return;
                     WorldObject site = Find.WorldObjects.AllWorldObjects.FirstOrDefault(o => o.ID == activeMissionSiteId);
-                    if (site != null)
+                    Thing proof = Find.Maps.Where(m => m.IsPlayerHome).SelectMany(m => m.listerThings.ThingsOfDef(DefDatabase<ThingDef>.GetNamed("Calido_MissionEvidence"))).FirstOrDefault(t => t.thingIDNumber == evidenceId);
+                    if (proof == null || (activeCampaignBeat == 0 && !missionRescue))
                     {
                         if (Find.TickManager.TicksGame >= activeMissionDeadlineTick)
                         {
@@ -596,10 +661,14 @@ namespace CalidoHomecoming
                         }
                         return;
                     }
+                    proof.Destroy();
+                    evidenceId = -1;
+                    if (site is MapParent cleared && !cleared.HasMap) cleared.Destroy();
                     if (!recoveredEvidence.Contains(activeCampaignBeat)) recoveredEvidence.Add(activeCampaignBeat);
                     activeMissionSiteId = -1;
                     activeMissionDeadlineTick = -1;
                 }
+                if (activeCampaignBeat == 12 && !reachedSkyPort) return;
                 if (Find.TickManager.TicksGame < activeCampaignResolveTick) return;
                 if (activeCampaignBeat == 5 && CountPlayerBuildings("Calido_GroundSignalBeacon") < 3)
                 {
@@ -637,6 +706,8 @@ namespace CalidoHomecoming
             campaignWindowOpen = false;
             activeCampaignCombat = IsCombatBeat(campaignBeat);
             activeCampaignResolveTick = (Find.TickManager?.TicksGame ?? 0) + (humane ? 60000 : 30000);
+            if (campaignBeat == 12 && !reachedSkyPort)
+                Find.LetterStack.ReceiveLetter("母城身分校準", "從南渡留言冊開啟卡利多航班，讓劇本主角親自登城。抵達後可使用登城港的留言冊返程。", LetterDefOf.NeutralEvent);
             if (NeedsMissionSite(campaignBeat))
             {
                 CreateMissionSite(beat);
@@ -664,25 +735,34 @@ namespace CalidoHomecoming
             WorldObjectDef def = DefDatabase<WorldObjectDef>.GetNamedSilentFail("Calido_MissionSite");
             if (faction == null || def == null)
             {
-                TriggerRaid(factionName);
+                FailCampaignBeat(null);
                 return;
             }
             CalidoMissionSite site = (CalidoMissionSite)WorldObjectMaker.MakeWorldObject(def);
             site.campaignBeat = campaignBeat;
             site.SetFaction(faction);
             site.Name = beat.Title;
-            site.Tile = TileFinder.RandomSettlementTileFor(faction, true, null);
+            if (!TileFinder.TryFindPassableTileWithTraversalDistance(Find.AnyPlayerHomeMap.Tile, 2, 12, out PlanetTile missionTile, t => !Find.WorldObjects.AnyWorldObjectAt(t)))
+            {
+                activeCampaignBeat = -1;
+                campaignNextTick = Find.TickManager.TicksGame + 60000;
+                Messages.Message("周邊沒有可抵達的任務地點，一天後重新派發。", MessageTypeDefOf.NeutralEvent);
+                return;
+            }
+            site.Tile = missionTile;
             Find.WorldObjects.Add(site);
+            evidenceId = -1;
+            missionRescue = false;
             activeMissionSiteId = site.ID;
             activeMissionDeadlineTick = Find.TickManager.TicksGame + (activeCampaignHumane ? 900000 : 600000);
             Find.LetterStack.ReceiveLetter("任務地點已標記：" + beat.Title,
-                "世界地圖上已出現「" + beat.Title + "」。派遣隊伍前往、取得密封證物並完成撤離。期限為 " + (activeCampaignHumane ? "15" : "10") + " 天；超時會失去證詞與對應好感。", LetterDefOf.ThreatBig, site);
+                "世界地圖上已出現「" + beat.Title + "」。派遣隊伍前往並把證物帶回基地卸貨。「失蹤車隊」還須在現場開籠救人；中繼站與抄經所須操作調查台。期限為 " + (activeCampaignHumane ? "15" : "10") + " 天；超時會失去證詞與對應好感。", LetterDefOf.ThreatBig, site);
         }
 
         private void FailCampaignBeat(WorldObject site)
         {
             CampaignBeat beat = CalidoCampaignContent.Beats[activeCampaignBeat];
-            site.Destroy();
+            if (site is MapParent expired && !expired.HasMap) expired.Destroy();
             activeMissionSiteId = -1;
             activeMissionDeadlineTick = -1;
             activeCampaignBeat = -1;
@@ -695,22 +775,169 @@ namespace CalidoHomecoming
 
         public void PopulateMissionSite(CalidoMissionSite site, Map map)
         {
-            if (site == null || map == null || site.campaignBeat < 0) return;
+            if (site == null || map == null || site.campaignBeat < -2) return;
+            IntVec3 anchor = CalidoMissionMapLayout.Build(site, map);
             ThingDef evidence = DefDatabase<ThingDef>.GetNamedSilentFail("Calido_MissionEvidence");
-            if (evidence != null) GenSpawn.Spawn(ThingMaker.MakeThing(evidence), CellFinder.RandomClosewalkCellNear(map.Center, map, 12), map);
+            if (evidence != null && site.ID == activeMissionSiteId && site.campaignBeat < 15)
+                PlaceMissionEvidence(map, anchor);
 
-            if (site.campaignBeat != 15) return;
-            string[] bossKinds = { "Milian_Mechanoid_KnightIV", "Milian_Mechanoid_BishopIV", "Milian_Mechanoid_RookIV" };
-            string[] bossNames = { "戰爭女皇・無訊", "懲戒女皇・斷鏈", "瘟疫女皇・靜潮" };
-            for (int i = 0; i < bossKinds.Length; i++)
+            if (site.Faction?.def.defName == "Calido_SlaveCaravan")
             {
-                PawnKindDef kind = DefDatabase<PawnKindDef>.GetNamedSilentFail(bossKinds[i]);
-                if (kind == null) continue;
-                Pawn boss = PawnGenerator.GeneratePawn(new PawnGenerationRequest(kind, Faction.OfMechanoids));
-                boss.Name = new NameSingle(bossNames[i]);
-                GenSpawn.Spawn(boss, CellFinder.RandomClosewalkCellNear(map.Center, map, 18), map);
+                int cages = Rand.RangeInclusive(1, 3);
+                for (int i = 0; i < cages; i++) SpawnSlaveCage(map, site.Faction, anchor);
             }
-            Find.LetterStack.ReceiveLetter("三機生物現身", "米莉安授權地點已生成三隻特殊機械生物：無訊、斷鏈、靜潮。清除據點並撤離後，才能取得米莉安授權證物。", LetterDefOf.ThreatBig, site);
+
+            if (site.campaignBeat >= 15)
+                CalidoFieldDesk.Place(map, anchor);
+            if (site.campaignBeat >= 16)
+            {
+                var guild = Find.FactionManager.AllFactions.FirstOrDefault(f => f.def.defName == "Calido_AdventurersGuild");
+                if (guild != null)
+                {
+                    var witness = PawnGenerator.GeneratePawn(PawnKindDefOf.Villager, guild);
+                    GenSpawn.Spawn(witness, CellFinder.RandomClosewalkCellNear(anchor, map, 4), map);
+                    Verse.AI.Group.LordMaker.MakeNewLord(guild, new Verse.AI.Group.LordJob_DefendPoint(anchor), map, new[]{witness});
+                }
+            }
+        }
+
+        private void TickTravelingSlaveCaravan()
+        {
+            if (Find.TickManager == null || Find.WorldObjects == null) return;
+            if (nextSlaveCaravanEncounterTick < 0) nextSlaveCaravanEncounterTick = Find.TickManager.TicksGame + 180000;
+            if (Find.TickManager.TicksGame < nextSlaveCaravanEncounterTick) return;
+            nextSlaveCaravanEncounterTick = Find.TickManager.TicksGame + 180000;
+            Caravan traveler = Find.WorldObjects.AllWorldObjects.OfType<Caravan>().Where(c => c.IsPlayerControlled).RandomElementWithFallback();
+            if (traveler == null || !Rand.Chance(0.08f) || !TileFinder.TryFindPassableTileWithTraversalDistance(traveler.Tile, 1, 5, out PlanetTile encounterTile, t => !Find.WorldObjects.AnyWorldObjectAt(t))) return;
+
+            Faction slavers = Find.FactionManager.AllFactions.FirstOrDefault(f => f.def.defName == "Calido_SlaveCaravan");
+            WorldObjectDef def = DefDatabase<WorldObjectDef>.GetNamedSilentFail("Calido_MissionSite");
+            if (slavers == null || def == null) return;
+            CalidoMissionSite site = (CalidoMissionSite)WorldObjectMaker.MakeWorldObject(def);
+            site.campaignBeat = -2;
+            site.SetFaction(slavers);
+            site.Name = "遭遇奴隸商隊";
+            site.Tile = encounterTile;
+            Find.WorldObjects.Add(site);
+            Find.LetterStack.ReceiveLetter("旅途目擊：奴隸商隊", "你的旅行隊伍收到附近鎖鏈商路的行蹤。世界地圖上已標記商隊；你可以繞開，也可以主動進攻並解救鐵籠中的人。", LetterDefOf.ThreatSmall, site);
+        }
+
+        public void NotifySlaveCageOutcome(string outcome, Faction originFaction, Map rescueMap)
+        {
+            if (!scenarioEnabled) return;
+            if (rescueMap?.Parent is CalidoMissionSite rescue && IsCurrentSite(rescue)) missionRescue = true;
+            switch (outcome)
+            {
+                case "收留":
+                    rescuedCaptives++;
+                    recruitedCaptives++;
+                    slaveCaravanNotoriety += 2;
+                    break;
+                case "資助":
+                    rescuedCaptives++;
+                    aidedCaptives++;
+                    slaveCaravanNotoriety += 2;
+                    break;
+                default:
+                    rescuedCaptives++;
+                    slaveCaravanNotoriety++;
+                    break;
+            }
+            originFaction?.TryAffectGoodwillWith(Faction.OfPlayer, outcome == "資助" ? 12 : 5, false, false, null, null);
+            if (slaveCaravanNotoriety >= 3 && nextSlaveRetaliationTick < 0)
+            {
+                nextSlaveRetaliationTick = (Find.TickManager?.TicksGame ?? 0) + 60000;
+                Find.LetterStack.ReceiveLetter("鎖鏈商路記下了南渡", "你的救援行動已讓鎖鏈商路損失貨物與聲望。一天內可能有押運隊前來報復；也可能有更多囚徒循著消息逃向南渡。", LetterDefOf.ThreatSmall);
+            }
+        }
+
+        private void TickSlaveCaravanRetaliation()
+        {
+            if (nextSlaveRetaliationTick < 0 || Find.TickManager == null || Find.TickManager.TicksGame < nextSlaveRetaliationTick) return;
+            nextSlaveRetaliationTick = -1;
+            if (slaveCaravanNotoriety < 3) return;
+            slaveCaravanNotoriety = 0;
+            TriggerRaid("Calido_SlaveCaravan");
+            Find.LetterStack.ReceiveLetter("鎖鏈商路報復", "一支押運武裝因你連續解救囚徒而來。他們會優先攻擊南渡的守衛與鐵籠證物。", LetterDefOf.ThreatBig);
+        }
+
+        private void QueueHeroPersonalLine(string heroName)
+        {
+            if (string.IsNullOrEmpty(heroName) || CalidoHeroPersonalContent.Get(heroName) == null || completedHeroPersonalLines.Contains(heroName)) return;
+            if (pendingHeroPersonalName != null)
+            {
+                if (pendingHeroPersonalName != heroName && !heroQueue.Contains(heroName)) heroQueue.Add(heroName);
+                return;
+            }
+            pendingHeroPersonalName = heroName;
+            pendingHeroPersonalTick = (Find.TickManager?.TicksGame ?? 0) + 4500;
+        }
+
+        private void TickHeroPersonalLine()
+        {
+            if (pendingHeroPersonalName == null && heroQueue.Count > 0)
+            {
+                string next = heroQueue[0];
+                heroQueue.RemoveAt(0);
+                QueueHeroPersonalLine(next);
+            }
+            if (heroPersonalWindowOpen || string.IsNullOrEmpty(pendingHeroPersonalName) || Find.TickManager == null || Find.TickManager.TicksGame < pendingHeroPersonalTick) return;
+            HeroPersonalLine line = CalidoHeroPersonalContent.Get(pendingHeroPersonalName);
+            if (line == null) { pendingHeroPersonalName = null; return; }
+            ThingDef supply = DefDatabase<ThingDef>.GetNamed(line.Supply);
+            heroPersonalWindowOpen = true;
+            Find.WindowStack.Add(new Dialog_ChapterOneEncounter(
+                "英雄個人線・" + line.Title, line.Name,
+                line.Request + "\n\n這不是主線的唯一正解；你的決定會記入該英雄的南渡記錄，也會改變對應陣營對你的看法。",
+                new Dialog_ChapterOneEncounter.Choice(line.ActionLabel, $"由基地撥出 {line.Amount} × {supply.LabelCap}。", () => ResolveHeroPersonalLine(line, true), () => ColonyHas(supply, line.Amount)),
+                new Dialog_ChapterOneEncounter.Choice("以南渡利益為先", "保留委託所需的物資，相關陣營的信任下降。", () => ResolveHeroPersonalLine(line, false)),
+                new Dialog_ChapterOneEncounter.Choice("暫緩處理", "延後一天再回應。", () => { heroPersonalWindowOpen = false; pendingHeroPersonalTick = Find.TickManager.TicksGame + 60000; })));
+        }
+
+        private void ResolveHeroPersonalLine(HeroPersonalLine line, bool compassionate)
+        {
+            completedHeroPersonalLines ??= new List<string>();
+            if (!completedHeroPersonalLines.Contains(line.Name)) completedHeroPersonalLines.Add(line.Name);
+            pendingHeroPersonalName = null;
+            pendingHeroPersonalTick = -1;
+            heroPersonalWindowOpen = false;
+            AffectFaction(line.AllyFaction, compassionate ? 8 : -3);
+            if (compassionate)
+            {
+                humanitarianChoices++;
+                ConsumeFromColony(DefDatabase<ThingDef>.GetNamed(line.Supply), line.Amount);
+                Find.LetterStack.ReceiveLetter(line.Name + "的記錄", "你選擇支持「" + line.Title + "」的處理方式。這份決定被寫進留言冊，並提高了相關陣營對南渡的信任。", LetterDefOf.PositiveEvent);
+            }
+            else
+            {
+                hardlineChoices++;
+
+                Find.LetterStack.ReceiveLetter(line.Name + "的記錄", "你選擇先保全南渡的資源。" + line.Name + "接受了決定，但沒有把那段沉默寫進公開版記錄。", LetterDefOf.NeutralEvent);
+            }
+        }
+
+        internal static void SpawnSlaveCage(Map map, Faction captorFaction, IntVec3 anchor)
+        {
+            ThingDef cageDef = DefDatabase<ThingDef>.GetNamedSilentFail("Calido_SlaveIronCage");
+            (string faction, string kind)[] origins =
+            {
+                ("Calido_KiiroKingdom", "Kiiro_Colonist"),
+                ("Calido_MihoKingdom", "Miho_Colonist"),
+                ("Calido_WolfeinKingdom", "Wolfein_Colonist"),
+                ("Calido_AxolotlRiverfolk", "Axolotl_Colonist"),
+                ("Calido_AdventurersGuild", "Colonist")
+            };
+            var available = origins.Where(o => DefDatabase<PawnKindDef>.GetNamedSilentFail(o.kind) != null &&
+                Find.FactionManager.AllFactions.Any(f => f.def.defName == o.faction)).ToList();
+            if (cageDef == null || available.Count == 0) return;
+            var origin = available.RandomElement();
+            Faction originFaction = Find.FactionManager.AllFactions.First(f => f.def.defName == origin.faction);
+            PawnKindDef captiveKind = DefDatabase<PawnKindDef>.GetNamed(origin.kind);
+            Building_SlaveIronCage cage = (Building_SlaveIronCage)ThingMaker.MakeThing(cageDef);
+            cage.SetOriginFaction(originFaction);
+            GenSpawn.Spawn(cage, CellFinder.RandomClosewalkCellNear(anchor, map, 8), map, WipeMode.Vanish);
+            Pawn captive = PawnGenerator.GeneratePawn(new PawnGenerationRequest(captiveKind, originFaction, fixedGender: origin.kind == "Colonist" ? Gender.Female : (Gender?)null));
+            cage.TryAcceptThing(captive, true);
         }
 
         private static int CountPlayerBuildings(string defName)
@@ -759,11 +986,11 @@ namespace CalidoHomecoming
             if (campaignBeat >= CalidoCampaignContent.Beats.Length)
             {
                 cultResurrectionUnlocked = true;
-                GrantReturningLantern();
+
                 string ending = humanitarianChoices >= hardlineChoices
                     ? "地面證詞被卡利多正式承認。你以救援與公開記錄取得了較完整的民用授權。"
-                    : "地面證詞被卡利多正式承認，但強硬手段留下了裂痕；太空商會將要求額外的授權研究成本。";
-                Find.LetterStack.ReceiveLetter("主線完成：歸航不是歸順", ending + "你可以往返天空與地面，高階科技授權已開放；白羽聖堂承認主角一直攜帶的渡口長槍正是神器的未覺醒形態。讓主角親自裝備一把渡口長槍，它將唯一一次進化為「歸燈」。邪教烙印則留下了一次以昏迷為代價的復生能力。", LetterDefOf.PositiveEvent);
+                    : "地面證詞被卡利多正式承認，但強硬手段留下了裂痕；公會在公開紀錄中保留了對行動手段的異議。";
+                Find.LetterStack.ReceiveLetter("主線完成：歸航不是歸順", ending + "你可以往返天空與地面，高階科技授權已開放；白羽聖堂的守燈儀式可從留言冊另行完成。完成守燈儀式後，由主角持槍喚醒「歸燈」。邪教烙印則留下了一次以昏迷為代價的復生能力。", LetterDefOf.PositiveEvent);
             }
             else
             {
@@ -771,7 +998,7 @@ namespace CalidoHomecoming
             }
         }
 
-        private static void RecruitHero(CampaignBeat beat)
+        private void RecruitHero(CampaignBeat beat)
         {
             PawnKindDef kind = DefDatabase<PawnKindDef>.GetNamedSilentFail("Milira_Colonist");
             Map map = Find.AnyPlayerHomeMap;
@@ -782,6 +1009,7 @@ namespace CalidoHomecoming
             HediffDef specialty = DefDatabase<HediffDef>.GetNamedSilentFail(beat.Specialty);
             if (specialty != null) pawn.health.AddHediff(specialty);
             GenSpawn.Spawn(pawn, CellFinder.RandomClosewalkCellNear(map.Center, map, 10), map);
+            QueueHeroPersonalLine(beat.HeroName);
         }
 
         private static void AffectFaction(string defName, int goodwill)
@@ -814,9 +1042,32 @@ namespace CalidoHomecoming
             }
         }
 
+        public bool ChurchVigilAvailable => chapterOneComplete && !returningLanternGranted && !returningLanternEvolutionReady;
+        public void OpenChurchVigil()
+        {
+            if (!ChurchVigilAvailable) return;
+            Find.WindowStack.Add(new Dialog_ChapterOneEncounter("白羽聖堂・渡口守燈", "守燈人",
+                "渡口銅印上留著失蹤者的名字。請帶回商路證詞，替他們守住這盞燈。",
+                new Dialog_ChapterOneEncounter.Choice("宣讀兩份證詞，為渡口守燈", "主角的長槍將能覺醒。", GrantReturningLantern, () => recoveredEvidence?.Count >= 2),
+                new Dialog_ChapterOneEncounter.Choice("稍後再來", "返回留言冊。", () => {})));
+        }
+
+        public void RecordWitness(bool anonymous)
+        {
+            if (anonymous) humanitarianChoices++;
+            else { hardlineChoices++; TriggerRaid("Calido_FallenCult"); }
+        }
+
+        public bool IsCurrentSite(CalidoMissionSite site) => site != null && site.ID == activeMissionSiteId;
+        internal void PlaceMissionEvidence(Map map, IntVec3 anchor)
+        {
+            Thing proof = ThingMaker.MakeThing(DefDatabase<ThingDef>.GetNamed("Calido_MissionEvidence"));
+            if (GenPlace.TryPlaceThing(proof, anchor, map, ThingPlaceMode.Near)) evidenceId = proof.thingIDNumber;
+        }
+
         private void GrantReturningLantern()
         {
-            if (returningLanternGranted) return;
+            if (returningLanternGranted || returningLanternEvolutionReady) return;
             returningLanternEvolutionReady = true;
             TryEvolveReturningLantern();
             if (!returningLanternGranted && !returningLanternReminderSent)
@@ -914,11 +1165,6 @@ namespace CalidoHomecoming
         {
             if (!cultResurrectionUnlocked || Find.TickManager == null) return;
             Pawn protagonist = Find.Maps.SelectMany(m => m.mapPawns.FreeColonistsSpawned).FirstOrDefault(p => p.thingIDNumber == protagonistId);
-            if (protagonist == null)
-            {
-                protagonist = Find.Maps.SelectMany(m => m.mapPawns.FreeColonistsSpawned).FirstOrDefault(IsMilira);
-                if (protagonist != null) protagonistId = protagonist.thingIDNumber;
-            }
             if (protagonist == null) return;
             HediffDef form = DefDatabase<HediffDef>.GetNamedSilentFail("Calido_FallenAngelForm");
             HediffDef exhaustionDef = DefDatabase<HediffDef>.GetNamedSilentFail("Calido_FallenExhaustion");
@@ -1063,7 +1309,7 @@ namespace CalidoHomecoming
 
         private static void ConsumeFromColony(ThingDef def, int count)
         {
-            foreach (Thing thing in Find.Maps.Where(m => m.IsPlayerHome).SelectMany(m => m.listerThings.ThingsOfDef(def)).ToList())
+            foreach (Thing thing in Find.Maps.Where(m => m.IsPlayerHome).SelectMany(m => m.listerThings.ThingsOfDef(def)).Where(t => t.Faction == Faction.OfPlayer || t.IsInAnyStorage()).ToList())
             {
                 int take = System.Math.Min(count, thing.stackCount);
                 thing.SplitOff(take).Destroy();
@@ -1184,9 +1430,25 @@ namespace CalidoHomecoming
             Scribe_Collections.Look(ref crossRaceEventsSeen, "crossRaceEventsSeen", LookMode.Value);
             Scribe_Values.Look(ref nextCrossRaceEventTick, "nextCrossRaceEventTick", -1);
             Scribe_Values.Look(ref nextGuildPrisonerVisitTick, "nextGuildPrisonerVisitTick", -1);
+            Scribe_Values.Look(ref nextSlaveCaravanEncounterTick, "nextSlaveCaravanEncounterTick", -1);
             Scribe_Values.Look(ref cultActivated, "cultActivated", false);
             Scribe_Values.Look(ref cultDiplomacyInitialized, "cultDiplomacyInitialized", false);
+            Scribe_Values.Look(ref rescuedCaptives, "rescuedCaptives", 0);
+            Scribe_Values.Look(ref recruitedCaptives, "recruitedCaptives", 0);
+            Scribe_Values.Look(ref aidedCaptives, "aidedCaptives", 0);
+            Scribe_Values.Look(ref slaveCaravanNotoriety, "slaveCaravanNotoriety", 0);
+            Scribe_Values.Look(ref nextSlaveRetaliationTick, "nextSlaveRetaliationTick", -1);
+            Scribe_Collections.Look(ref heroQueue, "heroQueue", LookMode.Value);
+            heroQueue ??= new List<string>();
+            Scribe_Values.Look(ref reachedSkyPort, "reachedSkyPort");
+            Scribe_Values.Look(ref missionRescue, "missionRescue");
+            Scribe_Values.Look(ref evidenceId, "missionEvidenceId", -1);
+            Scribe_Values.Look(ref pendingHeroPersonalName, "pendingHeroPersonalName");
+            Scribe_Values.Look(ref pendingHeroPersonalTick, "pendingHeroPersonalTick", -1);
+            Scribe_Collections.Look(ref completedHeroPersonalLines, "completedHeroPersonalLines", LookMode.Value);
             Scribe_Values.Look(ref startingReachSpearGranted, "startingReachSpearGranted", false);
+            Scribe_Values.Look(ref protagonistDeathLocked, "protagonistDeathLocked", false);
+            Scribe_Values.Look(ref protagonistDeathAcknowledged, "protagonistDeathAcknowledged", false);
 
             if (Scribe.mode == LoadSaveMode.PostLoadInit)
             {
@@ -1198,7 +1460,9 @@ namespace CalidoHomecoming
                 campaignWindowOpen = false;
                 crossRaceEventWindowOpen = false;
                 guildPrisonerWindowOpen = false;
+                heroPersonalWindowOpen = false;
                 crossRaceEventsSeen ??= new List<int>();
+                completedHeroPersonalLines ??= new List<string>();
             }
         }
     }

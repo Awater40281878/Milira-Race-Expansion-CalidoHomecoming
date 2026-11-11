@@ -95,7 +95,7 @@ namespace CalidoHomecoming
             if (state?.ChapterOneComplete == true)
             {
                 DrawEntry(view.width, ref y, "長篇主線進度", state.CampaignBeat >= CalidoCampaignContent.Beats.Length
-                    ? "全六章完成。卡利多科技、歸燈與墮天使復生均已解鎖。"
+                    ? "全六章完成。墮天使烙印已取得；歸燈由白羽聖堂的守燈儀式授予。"
                     : $"目前完成 {state.CampaignBeat}/{CalidoCampaignContent.Beats.Length} 項後續任務。下一項：{CalidoCampaignContent.Beats[state.CampaignBeat].Chapter}・{CalidoCampaignContent.Beats[state.CampaignBeat].Title}" +
                       (state.ActiveCampaignBeat >= 0 ? (state.ActiveCampaignCombat ? "\n目前狀態：行動中，必須清除仍有戰鬥能力的敵人。" : "\n目前狀態：調查／建設程序進行中。") : ""));
                 for (int i = 0; i < CalidoCampaignContent.Beats.Length; i++)
@@ -105,16 +105,26 @@ namespace CalidoHomecoming
                         i < state.CampaignBeat ? "已完成，" + beat.HeroName + "（" + beat.HeroTitle + "）已加入。" : i == state.CampaignBeat ? "進行中或等待觸發。" : "尚未解鎖。");
                 }
                 DrawEntry(view.width, ref y, "地面科技封鎖", state.CalidoTechUnlocked
-                    ? "已取得有限登城權，高階米莉拉裝備現可校準使用。"
+                    ? "四類科技授權已完成，高階米莉拉裝備現可校準使用。"
                     : $"仍在封鎖中。普通冷兵器與低階熱兵器不受影響；太空級米莉拉裝備會被自動卸下。\n民用：{Mark(state.CivilianBlueprintUnlocked)}　防具：{Mark(state.ArmorBlueprintUnlocked)}　武器：{Mark(state.WeaponBlueprintUnlocked)}　米莉安：{Mark(state.MilianBlueprintUnlocked)}");
+                DrawEntry(view.width, ref y, "英雄個人記錄", $"已完成 {state.HeroPersonalLinesCompleted}/20 條。每位英雄加入後會在南渡提出一項個人委託；選擇會改變相關陣營好感與主線的救援／強硬傾向。");
             }
 
             if (state?.MessagePostQuestComplete == true)
             {
                 DrawEntry(view.width, ref y, "四族隨機事件", $"已記錄 {state.CrossRaceEventsSeen}/160 條。美狐、奇羅、沃芬與萌螈各有40條；全部出現後才會重置抽取池。");
+                DrawEntry(view.width, ref y, "鎖鏈商路救援記錄", $"已解救 {state.RescuedCaptives} 人。連續救援會提高鎖鏈商路的報復值（目前 {state.SlaveCaravanNotoriety}/3）；資助返程者會提高其原屬種族陣營好感。世界地圖旅行時仍可能再次發現奴隸商隊。");
             }
             Widgets.EndScrollView();
 
+            if (state?.ChurchVigilAvailable == true && Widgets.ButtonText(new Rect(0f, inRect.height - 42f, 140f, 38f), "白羽聖堂・守燈"))
+                state.OpenChurchVigil();
+            if (state?.CampaignBeat >= 12 && Widgets.ButtonText(new Rect(146f, inRect.height - 42f, 150f, 38f), "卡利多航班"))
+                CalidoFlight.Open();
+            if (Widgets.ButtonText(new Rect(inRect.width - 360f, inRect.height - 42f, 180f, 38f), "卡利多授權終端"))
+            {
+                Find.WindowStack.Add(new Dialog_CalidoAuthorization(state));
+            }
             if (Widgets.ButtonText(new Rect(inRect.width - 170f, inRect.height - 42f, 170f, 38f), "關閉"))
             {
                 Close();

@@ -1,0 +1,24 @@
+<Defs>
+  <MapGeneratorDef><defName>Calido_ScriptoriumGround</defName><genSteps>
+    <li>ElevationFertility</li><li>Terrain</li><li>Plants</li>
+  </genSteps></MapGeneratorDef>
+  <MapGeneratorDef>
+    <defName>Calido_SkyCourt</defName><label>卡利多・登城港</label>
+    <pocketMapProperties><biome>TemperateForest</biome><temperature>20</temperature></pocketMapProperties>
+    <genSteps><li>Calido_SkyPort</li></genSteps>
+  </MapGeneratorDef>
+  <GenStepDef><defName>Calido_SkyPort</defName><order>300</order><genStep Class="CalidoHomecoming.GenStep_SkyPort"/></GenStepDef>
+  <ThingDef ParentName="BuildingBase">
+    <defName>Calido_FieldDesk</defName><label>現場調查台</label><description>派隊員走到台旁，選取調查台啟動現場行動。</description>
+    <thingClass>CalidoHomecoming.CalidoFieldDesk</thingClass><tickerType>Rare</tickerType><passability>PassThroughOnly</passability>
+    <graphicData><texPath>Things/Building/Misc/CommsConsole</texPath><graphicClass>Graphic_Multi</graphicClass></graphicData>
+    <statBases><MaxHitPoints>600</MaxHitPoints></statBases>
+  </ThingDef>
+  <ThingDef Name="CalidoRelayRelic" ParentName="ResourceBase" Abstract="True">
+    <graphicData><texPath>Things/Item/Resource/Gold</texPath><graphicClass>Graphic_StackCount</graphicClass></graphicData>
+    <stackLimit>1</stackLimit><statBases><MarketValue>240</MarketValue><Mass>0.5</Mass></statBases>
+  </ThingDef>
+  <ThingDef ParentName="CalidoRelayRelic"><defName>Calido_SilentCoil</defName><label>無訊的消音線圈</label><description>自靜默信標卸下的共振器，仍保留守衛的識別刻印。</description></ThingDef>
+  <ThingDef ParentName="CalidoRelayRelic"><defName>Calido_BrokenLink</defName><label>斷鏈的電弧接點</label><description>指揮網路燒熔時留下的雙歧接頭。</description></ThingDef>
+  <ThingDef ParentName="CalidoRelayRelic"><defName>Calido_TideFilter</defName><label>靜潮的濾芯</label><description>收容迴路中心取出的密封濾芯，可供收藏或交易。</description></ThingDef>
+</Defs>

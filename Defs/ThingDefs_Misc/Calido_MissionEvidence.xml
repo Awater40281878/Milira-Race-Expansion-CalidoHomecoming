@@ -4,8 +4,8 @@
     <defName>Calido_MissionEvidence</defName>
     <label>密封證物匣</label>
     <description>由任務地點帶回的原始記錄、名冊或校驗殘片。聽證會與授權程序會核對其數量。</description>
-    <graphicData><texPath>Things/Item/Resource/Gold</texPath><graphicClass>Graphic_Single</graphicClass><color>(0.45,0.82,0.88)</color></graphicData>
-    <stackLimit>25</stackLimit>
+    <graphicData><texPath>Things/Item/Resource/Gold</texPath><graphicClass>Graphic_StackCount</graphicClass><color>(0.45,0.82,0.88)</color></graphicData>
+    <stackLimit>1</stackLimit>
     <statBases><MarketValue>90</MarketValue><Mass>0.2</Mass></statBases>
   </ThingDef>
 </Defs>

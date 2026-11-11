@@ -18,6 +18,10 @@ namespace CalidoHomecoming
 
         private static void InstallMultiRaceFactionPools()
         {
+            InstallKingdomPopulation("Calido_MihoKingdom", "Miho_Faction_Megacorp", "Miho_Soldier_Militia", "美狐");
+            InstallKingdomPopulation("Calido_KiiroKingdom", "Kiiro_Faction", "Kiiro_Colonist", "綺羅");
+            InstallKingdomPopulation("Calido_WolfeinKingdom", "Wolfein_Faction_MegaCorp", "Wolfein_MegaCorpCivilian", "沃芬");
+            InstallKingdomPopulation("Calido_AxolotlRiverfolk", "AxolotlWanderingDynasty", "AxolotlCombatant_Physics", "萌螈");
             string[] terrestrialKinds =
             {
                 "Miho_Colonist", "Miho_Soldier_Militia", "Miho_Soldier_Hunter",
@@ -28,8 +32,7 @@ namespace CalidoHomecoming
             string[] groundFactions =
             {
                 "Calido_AdventurersGuild", "Calido_SlaveCaravan", "Calido_BanditCompanies",
-                "Calido_MiliraChurch", "Calido_FallenCult", "Calido_MihoKingdom",
-                "Calido_KiiroKingdom", "Calido_WolfeinKingdom", "Calido_AxolotlRiverfolk"
+                "Calido_MiliraChurch", "Calido_FallenCult"
             };
             int inserted = 0;
             foreach (string factionName in groundFactions)
@@ -62,6 +65,21 @@ namespace CalidoHomecoming
                 }
             }
             Log.Message($"[卡利多歸航] 已向地面陣營加入 {inserted} 項可用的跨種族生成選項；未安裝的種族會自動略過。");
+        }
+
+        private static void InstallKingdomPopulation(string kingdomName, string sourceName, string memberName, string raceLabel)
+        {
+            FactionDef kingdom = DefDatabase<FactionDef>.GetNamedSilentFail(kingdomName);
+            FactionDef source = DefDatabase<FactionDef>.GetNamedSilentFail(sourceName);
+            if (kingdom == null || source?.pawnGroupMakers == null) return;
+            kingdom.pawnGroupMakers = source.pawnGroupMakers;
+            kingdom.basicMemberKind = DefDatabase<PawnKindDef>.GetNamedSilentFail(memberName) ?? source.basicMemberKind;
+            kingdom.fixedLeaderKinds = source.fixedLeaderKinds;
+            if (kingdom.fixedLeaderKinds.NullOrEmpty() && kingdom.basicMemberKind != null)
+                kingdom.fixedLeaderKinds = new List<PawnKindDef> { kingdom.basicMemberKind };
+            // The Biotech tooltip reports xenotypes, while these four species are alien races.
+            kingdom.xenotypeSet = source.xenotypeSet;
+            kingdom.description += "\n\n主要居民：" + raceLabel + "族。商隊、守軍與護衛使用本族原陣營的人員編制。";
         }
 
         private static void InstallAuthorizationBlueprints()

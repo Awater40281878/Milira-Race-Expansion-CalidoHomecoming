@@ -3,6 +3,7 @@
   <!-- All pawn pools remain terrestrial and contain no Milira pawn kinds. -->
   <FactionDef ParentName="OutlanderFactionBase">
     <defName>Calido_AdventurersGuild</defName>
+    <factionIconPath MayRequire="Ludeon.RimWorld.Odyssey">World/WorldObjects/Expanding/TradersGuild</factionIconPath>
     <label>冒險者公會</label>
     <description>由各地旅人、傭兵、獵人與學者組成的跨國組織。公會接受委託、發布懸賞，也會派遣收押隊向聚落收購已確認身分的罪犯。少數地面米莉拉可能以個人身分加入，但公會沒有卡利多裝備的供應管道。</description>
     <colorSpectrum><li>(0.20, 0.42, 0.62)</li><li>(0.34, 0.58, 0.76)</li></colorSpectrum>
@@ -17,6 +18,7 @@
 
   <FactionDef ParentName="OutlanderRoughBase">
     <defName>Calido_SlaveCaravan</defName>
+    <factionIconPath>World/WorldObjects/Expanding/TownRough</factionIconPath>
     <label>鎖鏈商路</label>
     <description>由武裝商隊、押運站與地下拍賣場構成的奴隸商人網路。他們的軍隊比強盜正規，襲擊頻率較低，通常會先要求贖金、俘虜或通行權；受害者以亞人為主，也包括少數人類婦女與孩童。</description>
     <colorSpectrum><li>(0.34, 0.18, 0.12)</li><li>(0.50, 0.28, 0.16)</li></colorSpectrum>
@@ -28,6 +30,7 @@
 
   <FactionDef ParentName="PirateBandBase">
     <defName>Calido_BanditCompanies</defName>
+    <factionIconPath>World/WorldObjects/Expanding/PirateOutpost</factionIconPath>
     <label>荒路強盜</label>
     <description>盤據古道、渡口與廢棄堡壘的鬆散匪幫。他們通常會在交戰前提出條件，但要求往往刻意超出聚落能承受的範圍。</description>
     <colorSpectrum><li>(0.48, 0.10, 0.08)</li><li>(0.68, 0.18, 0.10)</li></colorSpectrum>
@@ -39,6 +42,7 @@
 
   <FactionDef ParentName="OutlanderFactionBase">
     <defName>Calido_MiliraChurch</defName>
+    <factionIconPath>Milira/Faction/FactionChurch_Icon</factionIconPath>
     <label>白羽聖堂</label>
     <description>由地面各族信徒建立的米莉拉教會。他們將從天而降的白翼旅人視為神使或神明，教團本身卻沒有米莉拉成員。聖堂也保管著一件只有米莉拉才能完全喚醒的冷兵器神器。</description>
     <colorSpectrum><li>(0.82, 0.78, 0.58)</li><li>(0.94, 0.90, 0.72)</li></colorSpectrum>
@@ -53,6 +57,7 @@
 
   <FactionDef ParentName="OutlanderRoughBase">
     <defName>Calido_FallenCult</defName>
+    <factionIconPath MayRequire="Ludeon.RimWorld.Anomaly">World/WorldObjects/Expanding/HoraxCult</factionIconPath>
     <label>蝕羽密教</label>
     <description>將墜落、傷痕與復生奉為啟示的地下教會。成員來自多個種族，正常情況下不包含米莉拉；只有極少數被稱為墮落天使的異常個體藏身其中。密教會隨支線推進才逐步發動襲擊。</description>
     <colorSpectrum><li>(0.24, 0.08, 0.28)</li><li>(0.42, 0.12, 0.46)</li></colorSpectrum>
@@ -69,6 +74,7 @@
        scenario generator suppresses its original alternate factions. -->
   <FactionDef ParentName="OutlanderFactionBase">
     <defName>Calido_MihoKingdom</defName>
+    <factionIconPath MayRequire="miho.fortifiedoutremer">Icon/Faction/Miho</factionIconPath>
     <label>美狐月紋諸侯國</label>
     <description>以月祭、商路與祖靈契約維繫的美狐城邦。地面章節只生成這一個美狐政治勢力。</description>
     <requiredCountAtGameStart>0</requiredCountAtGameStart>
@@ -79,6 +85,7 @@
 
   <FactionDef ParentName="OutlanderFactionBase">
     <defName>Calido_KiiroKingdom</defName>
+    <factionIconPath MayRequire="Ancot.KiiroRace">Kiiro/Faction/Faction_Icon_2</factionIconPath>
     <label>綺羅林地共同體</label>
     <description>由貓耳綺羅族的林地村落、紙坊與旅隊組成的共同體。地面章節只生成這一個綺羅勢力。</description>
     <requiredCountAtGameStart>0</requiredCountAtGameStart>
@@ -89,6 +96,7 @@
 
   <FactionDef ParentName="OutlanderFactionBase">
     <defName>Calido_WolfeinKingdom</defName>
+    <factionIconPath MayRequire="MelonDove.WolfeinRace">Wolfein/Faction/FactionIcon_2</factionIconPath>
     <label>沃芬邊境聯盟</label>
     <description>以邊境工坊、哨站與運輸線組成的沃芬聯盟。地面章節只生成這一個沃芬勢力。</description>
     <requiredCountAtGameStart>0</requiredCountAtGameStart>
@@ -99,6 +107,7 @@
 
   <FactionDef ParentName="OutlanderFactionBase">
     <defName>Calido_AxolotlRiverfolk</defName>
+    <factionIconPath MayRequire="HenTaiLoliTeam.Axolotl">Axolotl_Icon/Icon_Faction</factionIconPath>
     <label>萌螈河灣船隊</label>
     <description>沿河灣行走、以水燈與藥草維繫的萌螈船隊。地面章節只生成這一個萌螈勢力。</description>
     <requiredCountAtGameStart>0</requiredCountAtGameStart>
@@ -111,6 +120,7 @@
        surface settlement, visitor, raid, or trade route before their chapter. -->
   <FactionDef ParentName="OutlanderFactionBase">
     <defName>Calido_OrbitalTradeConsortium</defName>
+    <factionIconPath MayRequire="Ludeon.RimWorld.Odyssey">World/WorldObjects/Expanding/TradersGuild</factionIconPath>
     <label>太空商會</label>
     <fixedName>太空商會</fixedName>
     <description>在近地航道上營運的商會。尚未取得軌道許可前，地面無法觀測或聯絡他們。</description>
@@ -126,6 +136,7 @@
 
   <FactionDef ParentName="PirateBandBase">
     <defName>Calido_OrbitalPirates</defName>
+    <factionIconPath>World/WorldObjects/Expanding/PirateOutpost</factionIconPath>
     <label>太空海盜</label>
     <fixedName>太空海盜</fixedName>
     <description>潛伏於軌道殘骸帶的掠奪者。未解鎖太空章節前，他們不會進入地面事件池。</description>
@@ -141,6 +152,7 @@
 
   <FactionDef ParentName="OutlanderFactionBase">
     <defName>Calido_OrbitalMilira</defName>
+    <factionIconPath>Milira/Faction/Faction_Icon</factionIconPath>
     <label>卡利多天控城</label>
     <fixedName>卡利多天控城</fixedName>
     <description>米莉拉的軌道母城。它存在於這個世界的外交資料中，但在取得登城權以前沒有可見據點、無法通訊，也不會派遣地表單位。</description>

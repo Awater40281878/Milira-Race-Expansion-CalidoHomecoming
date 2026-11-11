@@ -2,10 +2,13 @@
 <Defs>
   <ThoughtDef>
     <defName>Calido_ProtagonistAuraMood</defName>
-    <stackLimit>1</stackLimit>
+    <workerClass>ThoughtWorker_AlwaysActive</workerClass>
+    <validWhileDespawned>true</validWhileDespawned>
+    <developmentalStageFilter>Baby, Child, Adult</developmentalStageFilter>
+    <requiredTraits><li>Calido_ProtagonistAura</li></requiredTraits>
     <stages>
       <li>
-        <label>主角光環</label>
+        <label>主角光環 (Protagonist Aura)</label>
         <description>我能感覺到……有無數雙眼睛正在螢幕另一頭注視著我。這意味著不論這片星系有多瘋狂，代碼和編劇都不會讓我輕易死掉。我有必須活到大結局的劇情需要！</description>
         <baseMoodEffect>12</baseMoodEffect>
       </li>

@@ -1,4 +1,6 @@
 using RimWorld;
+using HarmonyLib;
+using System.Linq;
 using System.Collections.Generic;
 using Verse;
 
@@ -25,70 +27,50 @@ namespace CalidoHomecoming
             "Calido_OrbitalTradeConsortium", "Calido_OrbitalPirates", "Calido_OrbitalMilira"
         };
 
-        private sealed class FactionGenerationSettings
-        {
-            public int RequiredCount;
-            public float SettlementWeight;
-        }
+        internal static bool StorySelected => Find.Scenario?.AllParts.Any(p => p is ScenPart_CalidoStory) == true;
 
-        private static readonly Dictionary<FactionDef, FactionGenerationSettings> OriginalGenerationSettings = new Dictionary<FactionDef, FactionGenerationSettings>();
-
-        public override void PreConfigure()
-        {
-            base.PreConfigure();
-            ConfigureStoryFactionGeneration();
-        }
+        internal static List<FactionDef> Roster() => SurfaceFactionDefNames.Concat(NonSurfaceFactionDefNames)
+            .Select(n => DefDatabase<FactionDef>.GetNamedSilentFail(n)).Where(f => f != null).Distinct().ToList();
 
         public override void PostGameStart()
         {
             base.PostGameStart();
-            // World generation has finished. Restore the defs so returning to the
-            // main menu and choosing another scenario does not inherit our factions.
-            RestoreFactionGeneration();
             Current.Game?.GetComponent<CalidoStoryState>()?.EnableScenario();
-        }
-
-        private static void ConfigureStoryFactionGeneration()
-        {
-            OriginalGenerationSettings.Clear();
-            foreach (FactionDef factionDef in DefDatabase<FactionDef>.AllDefsListForReading)
-            {
-                if (factionDef == null || factionDef.isPlayer) continue;
-                OriginalGenerationSettings[factionDef] = new FactionGenerationSettings
-                {
-                    RequiredCount = factionDef.requiredCountAtGameStart,
-                    SettlementWeight = factionDef.settlementGenerationWeight
-                };
-                factionDef.requiredCountAtGameStart = 0;
-            }
-
-            foreach (string defName in SurfaceFactionDefNames)
-                SetFactionGeneration(defName, 1, null);
-            foreach (string defName in NonSurfaceFactionDefNames)
-                SetFactionGeneration(defName, 1, 0f);
-        }
-
-        private static void SetFactionGeneration(string defName, int requiredCount, float? settlementWeight)
-        {
-            FactionDef factionDef = DefDatabase<FactionDef>.GetNamedSilentFail(defName);
-            if (factionDef == null || factionDef.isPlayer) return;
-            factionDef.requiredCountAtGameStart = requiredCount;
-            if (settlementWeight.HasValue) factionDef.settlementGenerationWeight = settlementWeight.Value;
-        }
-
-        private static void RestoreFactionGeneration()
-        {
-            foreach (KeyValuePair<FactionDef, FactionGenerationSettings> pair in OriginalGenerationSettings)
-            {
-                pair.Key.requiredCountAtGameStart = pair.Value.RequiredCount;
-                pair.Key.settlementGenerationWeight = pair.Value.SettlementWeight;
-            }
-            OriginalGenerationSettings.Clear();
         }
 
         public override string Summary(Scenario scen)
         {
             return "啟用《卡利多歸航》序幕、南渡留言冊與地面章節。其他劇本和既有存檔不會自動啟動。";
+        }
+    }
+
+    [HarmonyPatch(typeof(Page_CreateWorldParams), "ResetFactionCounts")]
+    internal static class CalidoResetRoster
+    {
+        static void Postfix(ref List<FactionDef> ___factions)
+        {
+            if (ScenPart_CalidoStory.StorySelected) ___factions = ScenPart_CalidoStory.Roster();
+        }
+    }
+
+    [HarmonyPatch(typeof(Page_CreateWorldParams), "DoWindowContents")]
+    internal static class CalidoWorldRoster
+    {
+        static void Prefix(ref List<FactionDef> ___factions)
+        {
+            if (!ScenPart_CalidoStory.StorySelected) return;
+            var roster = ScenPart_CalidoStory.Roster();
+            if (___factions == null || !___factions.SequenceEqual(roster)) ___factions = roster;
+        }
+    }
+
+    [HarmonyPatch(typeof(FactionGenerator), "get_ConfigurableFactions")]
+    internal static class CalidoFactionOptions
+    {
+        static void Postfix(ref IEnumerable<FactionDef> __result)
+        {
+            if (Current.ProgramState == ProgramState.Entry && ScenPart_CalidoStory.StorySelected)
+                __result = __result.Where(f => ScenPart_CalidoStory.Roster().Contains(f));
         }
     }
 }

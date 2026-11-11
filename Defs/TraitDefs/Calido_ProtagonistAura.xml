@@ -9,7 +9,7 @@
     <degreeDatas>
       <li>
         <label>主角光環</label>
-        <description>[PAWN_nameDef]是《借來的名字》選中的主角。即使卡利多的訊號已斷，這份意志仍使[PAWN_objective]較能承受疼痛、加快建立免疫力，並讓旁人更容易相信[PAWN_objective]的話。</description>
+        <description>[PAWN_nameDef]是《借來的名字》選中的主角。即使卡利多的訊號已斷，這份意志仍使[PAWN_objective]較能承受疼痛、加快建立免疫力，並讓旁人更容易相信[PAWN_objective]的話。\n\n永久心情 +12</description>
         <statOffsets>
           <PainShockThreshold>0.15</PainShockThreshold>
           <ImmunityGainSpeed>0.20</ImmunityGainSpeed>

@@ -27,7 +27,7 @@
     <graphicData>
       <texPath>Things/Item/Equipment/WeaponMelee/FerrySpear</texPath>
       <graphicClass>Graphic_Single</graphicClass>
-      <drawSize>(1.5,1.5)</drawSize>
+      <drawSize>(2.4,2.4)</drawSize>
     </graphicData>
     <techLevel>Neolithic</techLevel>
     <useHitPoints>true</useHitPoints>
@@ -64,10 +64,10 @@
     </recipeMaker>
     <verbs>
       <li>
-        <verbClass>Verb_Shoot</verbClass>
+        <verbClass>CalidoHomecoming.Verb_ReachThrust</verbClass>
         <hasStandardCommand>true</hasStandardCommand>
         <defaultProjectile>Calido_Projectile_ReachThrust</defaultProjectile>
-        <warmupTime>0.55</warmupTime>
+        <warmupTime>0</warmupTime>
         <minRange>1.5</minRange>
         <range>4.9</range>
       </li>
@@ -75,11 +75,11 @@
     <tools>
       <li>
         <label>槍桿</label><capacities><li>Blunt</li><li>Poke</li></capacities>
-        <power>6</power><stuffEffectMultiplier>0.25</stuffEffectMultiplier><cooldownTime>2.3</cooldownTime>
+        <power>6</power><cooldownTime>2.3</cooldownTime>
       </li>
       <li>
         <label>槍尖</label><capacities><li>Stab</li></capacities>
-        <power>13</power><stuffEffectMultiplier>0.45</stuffEffectMultiplier><armorPenetration>0.22</armorPenetration><cooldownTime>2.1</cooldownTime>
+        <power>13</power><armorPenetration>0.22</armorPenetration><cooldownTime>2.1</cooldownTime>
       </li>
     </tools>
   </ThingDef>

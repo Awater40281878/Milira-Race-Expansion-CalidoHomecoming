@@ -7,9 +7,7 @@
     <graphicData>
       <texPath>Things/Item/Equipment/WeaponMelee/ReturningLantern</texPath>
       <graphicClass>Graphic_Single</graphicClass>
-      <!-- Match Milira's native long-pole weapon scale. The source texture is
-           512x512 and fills the diagonal canvas like Lance/Spear. -->
-      <drawSize>(1.5,1.5)</drawSize>
+      <drawSize>(2.4,2.4)</drawSize>
     </graphicData>
     <techLevel>Medieval</techLevel>
     <uiIconScale>1.35</uiIconScale>

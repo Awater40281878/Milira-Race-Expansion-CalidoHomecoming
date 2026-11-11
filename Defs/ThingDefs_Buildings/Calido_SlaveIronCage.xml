@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <ThingDef ParentName="BuildingBase">
+    <defName>Calido_SlaveIronCage</defName>
+    <label>奴隸鐵籠</label>
+    <description>鎖鏈商路用來押運俘虜的鐵籠。打開前，沒有人知道裡面的人是否還能走路。</description>
+    <thingClass>CalidoHomecoming.Building_SlaveIronCage</thingClass>
+    <containedPawnsSelectable>true</containedPawnsSelectable>
+    <graphicData><texPath>Things/Building/Misc/Sarcophagus</texPath><graphicClass>Graphic_Multi</graphicClass><drawSize>(3,4)</drawSize><color>(0.24,0.25,0.27)</color></graphicData>
+    <drawerType>RealtimeOnly</drawerType>
+    <passability>Impassable</passability>
+    <fillPercent>0.5</fillPercent>
+    <useHitPoints>true</useHitPoints>
+    <statBases><MaxHitPoints>220</MaxHitPoints><Flammability>0.25</Flammability></statBases>
+    <building><isEdifice>true</isEdifice><destroySound>BuildingDestroyed_Metal_Medium</destroySound></building>
+    <inspectorTabs><li>ITab_ContentsCasket</li></inspectorTabs>
+  </ThingDef>
+</Defs>
