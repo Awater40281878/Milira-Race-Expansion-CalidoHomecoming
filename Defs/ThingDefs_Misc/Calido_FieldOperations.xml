@@ -1,4 +1,12 @@
 <Defs>
+  <ThingDef ParentName="BuildingBase">
+    <defName>Calido_HeroMeetingMarker</defName>
+    <label>旅人的行囊</label>
+    <description>一位米莉拉旅人在這裡留下的物品。讓隊員走近後調查。</description>
+    <thingClass>CalidoHomecoming.CalidoHeroMeetingMarker</thingClass>
+    <graphicData><texPath>Things/Building/Furniture/ShelfSmall</texPath><graphicClass>Graphic_Multi</graphicClass></graphicData>
+    <passability>PassThroughOnly</passability><statBases><MaxHitPoints>500</MaxHitPoints></statBases>
+  </ThingDef>
   <MapGeneratorDef><defName>Calido_ScriptoriumGround</defName><genSteps>
     <li>ElevationFertility</li><li>Terrain</li><li>Plants</li>
   </genSteps></MapGeneratorDef>

@@ -3,6 +3,7 @@ using RimWorld.Planet;
 using System.Collections.Generic;
 using System.Linq;
 using Verse;
+using Verse.AI.Group;
 
 namespace CalidoHomecoming
 {
@@ -43,6 +44,9 @@ namespace CalidoHomecoming
         private int chapterOneNextTick = -1;
         private bool chapterOneWindowOpen;
         private bool firstHeroRecruited;
+        private bool firstHeroDeclined;
+        private int firstHeroReturnTick = -1;
+        private bool firstHeroReturnDialogOpen;
         private bool chapterOneComplete;
         private int campaignBeat;
         private int campaignNextTick = -1;
@@ -79,6 +83,9 @@ namespace CalidoHomecoming
         private int slaveCaravanNotoriety;
         private int nextSlaveRetaliationTick = -1;
         private List<string> heroQueue = new List<string>();
+        private List<string> pendingHeroInvitations = new List<string>();
+        private int nextHeroInvitationTick;
+        private bool heroInvitationOpen;
         private int evidenceId = -1;
         private bool reachedSkyPort;
         private bool missionRescue;
@@ -176,6 +183,8 @@ namespace CalidoHomecoming
             TickTravelingSlaveCaravan();
             TickSlaveCaravanRetaliation();
             TickHeroPersonalLine();
+            TickFirstHeroReturn();
+            TickHeroInvitations();
 
             if (prologueComplete || prologueQueued || Find.TickManager == null)
             {
@@ -611,27 +620,61 @@ namespace CalidoHomecoming
                 "獲救的記錄員身旁還有一名用舊布包住翅膀的米莉拉。她自稱伊蕾希雅，是失去天空航標後在地面替人運送物資的遠棧。她沒有卡利多裝備，只有磨損的旅行衣與一張寫滿道路的地圖。\n\n「如果妳也在找回去的路，我可以先替這裡的人搬東西。」",
                 new Dialog_ChapterOneEncounter.Choice("邀請她加入", "伊蕾希雅將成為殖民者。", RecruitFirstHero),
                 new Dialog_ChapterOneEncounter.Choice("請她先留在南渡", "她仍會加入，但以觀察者身分開始。", RecruitFirstHero),
-                new Dialog_ChapterOneEncounter.Choice("拒絕", "她會離開；之後可由公會支線再次招募。", () => AdvanceChapter("伊蕾希雅收起地圖離開南渡。公會答應日後替你轉交消息。"))));
+                new Dialog_ChapterOneEncounter.Choice("拒絕", "她會離開；之後可由公會支線再次招募。", () => { firstHeroDeclined = true; firstHeroReturnTick = Find.TickManager.TicksGame + 180000; AdvanceChapter("伊蕾希雅收起地圖離開南渡。公會答應日後替你轉交消息。"); })));
         }
 
         private void RecruitFirstHero()
         {
-            PawnKindDef kind = DefDatabase<PawnKindDef>.GetNamedSilentFail("Milira_Colonist");
             Map map = Find.AnyPlayerHomeMap;
-            if (kind != null && map != null)
+            CalidoHeroRegistry registry = Current.Game?.GetComponent<CalidoHeroRegistry>();
+            Pawn pawn = registry?.EnsureHero(0);
+            if (pawn != null && !pawn.Dead && map != null && !pawn.Spawned)
             {
-                Pawn pawn = PawnGenerator.GeneratePawn(new PawnGenerationRequest(kind, Faction.OfPlayer));
-                pawn.Name = new NameTriple("伊蕾希雅", "遠棧", "阿斯特里昂");
+                if (Find.WorldPawns.Contains(pawn)) Find.WorldPawns.RemovePawn(pawn);
+                pawn.SetFaction(Faction.OfPlayer);
                 HediffDef specialty = DefDatabase<HediffDef>.GetNamedSilentFail("Calido_Hero_Waystation");
-                if (specialty != null)
+                if (specialty != null && !pawn.health.hediffSet.HasHediff(specialty))
                 {
                     pawn.health.AddHediff(specialty);
                 }
                 GenSpawn.Spawn(pawn, CellFinder.RandomClosewalkCellNear(map.Center, map, 8), map);
                 firstHeroRecruited = true;
+                firstHeroDeclined = false;
+                registry.MarkJoined(0);
                 QueueHeroPersonalLine("伊蕾希雅");
             }
             AdvanceChapter("伊蕾希雅把地圖釘在留言柱背面。她是第一位加入南渡的米莉拉英雄，也是卡利多失聯並非孤例的第一份證據。" );
+        }
+
+        private void TickFirstHeroReturn()
+        {
+            if (!firstHeroDeclined || firstHeroRecruited || firstHeroReturnDialogOpen ||
+                Find.TickManager == null || Find.TickManager.TicksGame < firstHeroReturnTick || Find.AnyPlayerHomeMap == null) return;
+            Pawn hero = Current.Game.GetComponent<CalidoHeroRegistry>()?.EnsureHero(0);
+            if (hero == null || hero.Dead) { firstHeroDeclined = false; return; }
+            firstHeroReturnDialogOpen = true;
+            Find.WindowStack.Add(new Dialog_ChapterOneEncounter("公會來信・遠棧的回音", "冒險者公會代理人",
+                "「伊蕾希雅還在替渡口送貨。她沒有忘記南渡，也沒有要求你補償上次的拒絕。她想知道這裡是否仍需要一名搬運者。」",
+                new Dialog_ChapterOneEncounter.Choice("請公會轉交邀請", "伊蕾希雅會攜帶她的道路紀錄加入。", () => { firstHeroReturnDialogOpen = false; RecruitFirstHeroAfterReturn(); }),
+                new Dialog_ChapterOneEncounter.Choice("再等一段時間", "三天後公會會再次詢問。", () => { firstHeroReturnDialogOpen = false; firstHeroReturnTick = Find.TickManager.TicksGame + 180000; })));
+        }
+
+        private void RecruitFirstHeroAfterReturn()
+        {
+            CalidoHeroRegistry registry = Current.Game.GetComponent<CalidoHeroRegistry>();
+            Pawn hero = registry?.EnsureHero(0);
+            Map map = Find.AnyPlayerHomeMap;
+            if (hero == null || hero.Dead || hero.Spawned || map == null) return;
+            if (Find.WorldPawns.Contains(hero)) Find.WorldPawns.RemovePawn(hero);
+            hero.SetFaction(Faction.OfPlayer);
+            HediffDef specialty = DefDatabase<HediffDef>.GetNamedSilentFail("Calido_Hero_Waystation");
+            if (specialty != null && !hero.health.hediffSet.HasHediff(specialty)) hero.health.AddHediff(specialty);
+            GenSpawn.Spawn(hero, CellFinder.RandomClosewalkCellNear(map.Center, map, 8), map);
+            firstHeroRecruited = true;
+            firstHeroDeclined = false;
+            registry.MarkJoined(0);
+            QueueHeroPersonalLine("伊蕾希雅");
+            Find.LetterStack.ReceiveLetter("遠棧再次抵達", "伊蕾希雅攤開舊地圖。「這次，讓我們一起把路畫完。」", LetterDefOf.PositiveEvent, hero);
         }
 
         private void OpenBanditNegotiation()
@@ -722,8 +765,8 @@ namespace CalidoHomecoming
             CampaignBeat beat = CalidoCampaignContent.Beats[campaignBeat];
             campaignWindowOpen = true;
             Find.WindowStack.Add(new Dialog_ChapterOneEncounter(
-                beat.Chapter + "：" + beat.Title, beat.HeroName + "・" + beat.HeroTitle,
-                beat.Body + "\n\n完成此任務後，" + beat.HeroName + "會以「" + beat.HeroTitle + "」身分加入南渡。她只攜帶地面裝備。",
+                beat.Chapter + "：" + beat.Title, "南渡記錄人",
+                beat.Body + "\n\n地面上的消息仍有待查證。準備好之後，就可以選擇行動方式。",
                 new Dialog_ChapterOneEncounter.Choice("開始主要行動", "建立任務狀態；戰鬥任務必須清除來襲威脅才會完成。", () => StartCampaignBeat(beat, false)),
                 new Dialog_ChapterOneEncounter.Choice("採取救援優先方案", "投入更多時間避免犧牲；完成後記錄為救援解法。", () => StartCampaignBeat(beat, true)),
                 new Dialog_ChapterOneEncounter.Choice("延後 1 天", "不會失敗或跳過。", () => { campaignWindowOpen = false; campaignNextTick = Find.TickManager.TicksGame + 60000; })));
@@ -914,6 +957,19 @@ namespace CalidoHomecoming
             if (heroPersonalWindowOpen || string.IsNullOrEmpty(pendingHeroPersonalName) || Find.TickManager == null || Find.TickManager.TicksGame < pendingHeroPersonalTick) return;
             HeroPersonalLine line = CalidoHeroPersonalContent.Get(pendingHeroPersonalName);
             if (line == null) { pendingHeroPersonalName = null; return; }
+            CalidoHeroRegistry registry = Current.Game.GetComponent<CalidoHeroRegistry>();
+            int heroIndex = registry?.IndexOf(line.Name) ?? -1;
+            Pawn hero = registry?.FindHero(heroIndex);
+            if (hero == null || hero.Dead || hero.Faction != Faction.OfPlayer)
+            {
+                pendingHeroPersonalName = null;
+                return;
+            }
+            if (!hero.Spawned || hero.Map?.IsPlayerHome != true)
+            {
+                pendingHeroPersonalTick = Find.TickManager.TicksGame + 2500;
+                return;
+            }
             ThingDef supply = DefDatabase<ThingDef>.GetNamed(line.Supply);
             heroPersonalWindowOpen = true;
             Find.WindowStack.Add(new Dialog_ChapterOneEncounter(
@@ -932,6 +988,12 @@ namespace CalidoHomecoming
             pendingHeroPersonalTick = -1;
             heroPersonalWindowOpen = false;
             AffectFaction(line.AllyFaction, compassionate ? 8 : -3);
+            Current.Game.GetComponent<CalidoHeroStories>()?.Begin(line.Name, compassionate);
+            CalidoHeroRegistry registry = Current.Game.GetComponent<CalidoHeroRegistry>();
+            Pawn hero = registry?.FindHero(registry.IndexOf(line.Name));
+            ThoughtDef reaction = DefDatabase<ThoughtDef>.GetNamedSilentFail(compassionate ? "Calido_HeroSupported" : "Calido_HeroDisappointed");
+            if (hero?.needs?.mood?.thoughts?.memories != null && reaction != null)
+                hero.needs.mood.thoughts.memories.TryGainMemory(reaction);
             if (compassionate)
             {
                 humanitarianChoices++;
@@ -1006,7 +1068,10 @@ namespace CalidoHomecoming
                 AffectFaction("Calido_MiliraChurch", -2);
                 AffectFaction("Calido_BanditCompanies", -1);
             }
-            RecruitHero(beat);
+            pendingHeroInvitations ??= new List<string>();
+            if (!pendingHeroInvitations.Contains(beat.HeroName))
+                pendingHeroInvitations.Add(beat.HeroName);
+            nextHeroInvitationTick = (Find.TickManager?.TicksGame ?? 0) + 1200;
             campaignBeat++;
             campaignWindowOpen = false;
             campaignNextTick = (Find.TickManager?.TicksGame ?? 0) + 3000;
@@ -1024,22 +1089,93 @@ namespace CalidoHomecoming
             }
             else
             {
-                Find.LetterStack.ReceiveLetter(beat.Title + "完成", (humane ? "你選擇了救援優先的處理方式。" : "主要目標已完成。") + "\n" + beat.HeroName + "加入殖民地。", LetterDefOf.NeutralEvent);
+                Find.LetterStack.ReceiveLetter(beat.Title + "完成", (humane ? "你選擇了救援優先的處理方式。" : "主要目標已完成。") + "\n" + beat.HeroName + "希望與南渡見面。", LetterDefOf.NeutralEvent);
             }
         }
 
-        private void RecruitHero(CampaignBeat beat)
+        private void TickHeroInvitations()
         {
-            PawnKindDef kind = DefDatabase<PawnKindDef>.GetNamedSilentFail("Milira_Colonist");
-            Map map = Find.AnyPlayerHomeMap;
-            if (kind == null || map == null) return;
-            Pawn pawn = PawnGenerator.GeneratePawn(new PawnGenerationRequest(kind, Faction.OfPlayer));
-            pawn.Name = new NameTriple(beat.HeroName, beat.HeroTitle, "卡利多");
+            if (heroInvitationOpen || Find.TickManager == null || Find.TickManager.TicksGame < nextHeroInvitationTick ||
+                pendingHeroInvitations == null || pendingHeroInvitations.Count == 0 || Find.AnyPlayerHomeMap == null) return;
+            string name = pendingHeroInvitations[0];
+            CampaignBeat beat = CalidoCampaignContent.Beats.FirstOrDefault(b => b.HeroName == name);
+            CalidoHeroRegistry registry = Current.Game.GetComponent<CalidoHeroRegistry>();
+            Pawn pawn = registry?.EnsureHero(registry.IndexOf(name));
+            if (beat == null || pawn == null || pawn.Dead || registry.HasJoined(registry.IndexOf(name)))
+            {
+                pendingHeroInvitations.RemoveAt(0);
+                return;
+            }
+            int index = registry.IndexOf(name);
+            bool alreadyMarked = Find.WorldObjects.AllWorldObjects.OfType<CalidoMissionSite>().Any(s => s.heroIndex == index);
+            if (alreadyMarked) { pendingHeroInvitations.RemoveAt(0); return; }
+            Faction faction = Find.FactionManager.AllFactions.FirstOrDefault(f => f.def.defName == "Calido_BanditCompanies");
+            WorldObjectDef def = DefDatabase<WorldObjectDef>.GetNamedSilentFail("Calido_MissionSite");
+            if (faction == null || def == null ||
+                !TileFinder.TryFindPassableTileWithTraversalDistance(Find.AnyPlayerHomeMap.Tile, 2, 12, out PlanetTile tile, t => !Find.WorldObjects.AnyWorldObjectAt(t)))
+            {
+                nextHeroInvitationTick = Find.TickManager.TicksGame + 60000;
+                return;
+            }
+            var site = (CalidoMissionSite)WorldObjectMaker.MakeWorldObject(def);
+            site.campaignBeat = -3;
+            site.heroIndex = index;
+            site.Name = CalidoHeroEncounter.PlaceName(index);
+            site.SetFaction(faction);
+            site.Tile = tile;
+            Find.WorldObjects.Add(site);
+            pendingHeroInvitations.RemoveAt(0);
+            nextHeroInvitationTick = Find.TickManager.TicksGame + 1200;
+            Find.LetterStack.ReceiveLetter("旅人的消息", "公會在世界地圖上標記了一處可調查的地點。派遣旅行隊前往，與當地的旅人見面。", LetterDefOf.NeutralEvent, site);
+        }
+
+        internal void RecruitHeroAtSite(CampaignBeat beat, Pawn pawn)
+        {
+            CalidoHeroRegistry registry = Current.Game?.GetComponent<CalidoHeroRegistry>();
+            int index = registry?.IndexOf(beat.HeroName) ?? -1;
+            if (pawn == null || pawn.Dead || !pawn.Spawned || registry?.FindHero(index) != pawn) return;
+            pawn.GetLord()?.RemovePawn(pawn);
+            pawn.SetFaction(Faction.OfPlayer);
             ApplyHeroProfile(pawn, beat.HeroTitle);
             HediffDef specialty = DefDatabase<HediffDef>.GetNamedSilentFail(beat.Specialty);
-            if (specialty != null) pawn.health.AddHediff(specialty);
-            GenSpawn.Spawn(pawn, CellFinder.RandomClosewalkCellNear(map.Center, map, 10), map);
+            if (specialty != null && !pawn.health.hediffSet.HasHediff(specialty)) pawn.health.AddHediff(specialty);
+            registry.MarkJoined(index);
             QueueHeroPersonalLine(beat.HeroName);
+            Messages.Message(beat.HeroName + "願意同行。請把她編入返程旅行隊。", pawn, MessageTypeDefOf.PositiveEvent, false);
+        }
+
+        private bool RecruitHero(CampaignBeat beat)
+        {
+            Map map = Find.AnyPlayerHomeMap;
+            CalidoHeroRegistry registry = Current.Game?.GetComponent<CalidoHeroRegistry>();
+            int index = registry?.IndexOf(beat.HeroName) ?? -1;
+            Pawn pawn = registry?.EnsureHero(index);
+            if (pawn == null || pawn.Dead || map == null || pawn.Spawned) return false;
+            if (Find.WorldPawns.Contains(pawn)) Find.WorldPawns.RemovePawn(pawn);
+            pawn.SetFaction(Faction.OfPlayer);
+            ApplyHeroProfile(pawn, beat.HeroTitle);
+            HediffDef specialty = DefDatabase<HediffDef>.GetNamedSilentFail(beat.Specialty);
+            if (specialty != null && !pawn.health.hediffSet.HasHediff(specialty)) pawn.health.AddHediff(specialty);
+            GenSpawn.Spawn(pawn, CellFinder.RandomClosewalkCellNear(map.Center, map, 10), map);
+            registry.MarkJoined(index);
+            QueueHeroPersonalLine(beat.HeroName);
+            return true;
+        }
+
+        public void NotifyHeroLost(string name, bool dead)
+        {
+            if (pendingHeroPersonalName == name)
+            {
+                pendingHeroPersonalName = null;
+                pendingHeroPersonalTick = -1;
+                heroPersonalWindowOpen = false;
+            }
+            heroQueue?.Remove(name);
+            AffectFaction("Calido_AdventurersGuild", dead ? -3 : -1);
+            Find.LetterStack.ReceiveLetter(name + (dead ? "殞落" : "離開南渡"),
+                dead ? name + "的名字留在留言冊上。她尚未完成的個人委託不再自動出現，公會會記錄她的死訊。"
+                     : name + "離開了南渡。她的個人委託暫時中止；公會保留了她的紀錄。",
+                LetterDefOf.NegativeEvent);
         }
 
         private static void AffectFaction(string defName, int goodwill)
@@ -1456,6 +1592,8 @@ namespace CalidoHomecoming
             Scribe_Values.Look(ref chapterOneStep, "chapterOneStep", 0);
             Scribe_Values.Look(ref chapterOneNextTick, "chapterOneNextTick", -1);
             Scribe_Values.Look(ref firstHeroRecruited, "firstHeroRecruited", false);
+            Scribe_Values.Look(ref firstHeroDeclined, "firstHeroDeclined", false);
+            Scribe_Values.Look(ref firstHeroReturnTick, "firstHeroReturnTick", -1);
             Scribe_Values.Look(ref chapterOneComplete, "chapterOneComplete", false);
             Scribe_Values.Look(ref campaignBeat, "campaignBeat", 0);
             Scribe_Values.Look(ref campaignNextTick, "campaignNextTick", -1);
@@ -1489,6 +1627,8 @@ namespace CalidoHomecoming
             Scribe_Values.Look(ref slaveCaravanNotoriety, "slaveCaravanNotoriety", 0);
             Scribe_Values.Look(ref nextSlaveRetaliationTick, "nextSlaveRetaliationTick", -1);
             Scribe_Collections.Look(ref heroQueue, "heroQueue", LookMode.Value);
+            Scribe_Collections.Look(ref pendingHeroInvitations, "pendingHeroInvitations", LookMode.Value);
+            Scribe_Values.Look(ref nextHeroInvitationTick, "nextHeroInvitationTick");
             heroQueue ??= new List<string>();
             Scribe_Values.Look(ref reachedSkyPort, "reachedSkyPort");
             Scribe_Values.Look(ref missionRescue, "missionRescue");
@@ -1511,6 +1651,9 @@ namespace CalidoHomecoming
                 crossRaceEventWindowOpen = false;
                 guildPrisonerWindowOpen = false;
                 heroPersonalWindowOpen = false;
+                firstHeroReturnDialogOpen = false;
+                heroInvitationOpen = false;
+                pendingHeroInvitations ??= new List<string>();
                 crossRaceEventsSeen ??= new List<int>();
                 completedHeroPersonalLines ??= new List<string>();
             }

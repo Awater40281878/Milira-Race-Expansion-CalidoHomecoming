@@ -117,8 +117,12 @@ namespace CalidoHomecoming
                 for (int i = 0; i < CalidoCampaignContent.Beats.Length; i++)
                 {
                     CampaignBeat beat = CalidoCampaignContent.Beats[i];
+                    if (i > state.CampaignBeat) continue;
+                    var registry = Current.Game?.GetComponent<CalidoHeroRegistry>();
+                    int heroIndex = registry?.IndexOf(beat.HeroName) ?? -1;
+                    string heroStatus = registry?.HasJoined(heroIndex) == true ? beat.HeroName + "已加入或曾加入。" : "仍有線索等待調查。";
                     DrawEntry(view.width, ref y, beat.Chapter + "／" + beat.Title,
-                        i < state.CampaignBeat ? "已完成，" + beat.HeroName + "（" + beat.HeroTitle + "）已加入。" : i == state.CampaignBeat ? "進行中或等待觸發。" : "尚未解鎖。");
+                        i < state.CampaignBeat ? "任務已完成；" + heroStatus : "進行中或等待觸發。");
                 }
                 DrawEntry(view.width, ref y, "地面科技封鎖", state.CalidoTechUnlocked
                     ? "四類科技授權已完成，高階米莉拉裝備現可校準使用。"

@@ -12,7 +12,15 @@ namespace CalidoHomecoming
         {
             IntVec3 anchor = FindAnchor(map);
             int beat = site.campaignBeat;
-            if (beat == -2 || beat <= 3)
+            if (site.heroIndex >= 0)
+            {
+                int variant = site.heroIndex % 4;
+                if (variant == 0) BuildSlaveCompound(map, anchor, false);
+                else if (variant == 1) BuildInspectionPost(map, anchor);
+                else if (variant == 2) BuildScriptorium(map, anchor);
+                else BuildMechRelay(map, anchor);
+            }
+            else if (beat == -2 || beat <= 3)
                 BuildSlaveCompound(map, anchor, beat == 1);
             else if (beat == 15)
                 BuildMechRelay(map, anchor);

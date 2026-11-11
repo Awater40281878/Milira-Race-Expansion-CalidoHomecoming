@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <ThoughtDef>
+    <defName>Calido_HeroSupported</defName>
+    <durationDays>15</durationDays><stackLimit>1</stackLimit>
+    <stages><li><label>南渡支持了我的心願</label><description>我提出的請求得到了認真的回應。這讓我更願意相信南渡。</description><baseMoodEffect>5</baseMoodEffect></li></stages>
+  </ThoughtDef>
+  <ThoughtDef>
+    <defName>Calido_HeroDisappointed</defName>
+    <durationDays>10</durationDays><stackLimit>1</stackLimit>
+    <stages><li><label>心願被擱置</label><description>我明白南渡也有難處，但這次決定仍讓我有些失落。</description><baseMoodEffect>-4</baseMoodEffect></li></stages>
+  </ThoughtDef>
+</Defs>

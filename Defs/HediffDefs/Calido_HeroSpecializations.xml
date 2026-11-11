@@ -3,14 +3,13 @@
   <HediffDef>
     <defName>Calido_Hero_Waystation</defName>
     <label>米莉拉英雄：遠棧</label>
-    <description>伊蕾希雅對道路、重量分配與長途補給具有異常敏銳的直覺。這是英雄專精，而非卡利多高科技。</description>
+    <description>伊蕾希雅搬運物資時移速提高 400%，負重能力為基礎的 1000%。</description>
     <hediffClass>HediffWithComps</hediffClass>
     <isBad>false</isBad>
     <stages>
       <li>
         <label>遠棧</label>
         <statFactors>
-          <MoveSpeed>5.0</MoveSpeed>
           <CarryingCapacity>10.0</CarryingCapacity>
         </statFactors>
       </li>

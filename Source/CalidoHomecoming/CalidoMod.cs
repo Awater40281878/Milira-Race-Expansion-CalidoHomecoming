@@ -12,8 +12,17 @@ namespace CalidoHomecoming
         {
             Log.Message("[卡利多歸航] 模組框架已載入。");
             new Harmony("asuisui.calidohomecoming").PatchAll();
+            LongEventHandler.ExecuteWhenFinished(InstallWaystationSpeed);
             LongEventHandler.ExecuteWhenFinished(InstallAuthorizationBlueprints);
             LongEventHandler.ExecuteWhenFinished(InstallMultiRaceFactionPools);
+        }
+
+        private static void InstallWaystationSpeed()
+        {
+            StatDef move = StatDefOf.MoveSpeed;
+            move.parts ??= new List<StatPart>();
+            if (!move.parts.Exists(p => p is StatPart_WaystationHauling))
+                move.parts.Add(new StatPart_WaystationHauling { parentStat = move });
         }
 
         private static void InstallMultiRaceFactionPools()

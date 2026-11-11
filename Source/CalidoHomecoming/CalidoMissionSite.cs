@@ -7,6 +7,7 @@ namespace CalidoHomecoming
     public sealed class CalidoMissionSite : Settlement
     {
         public int campaignBeat = -1;
+        public int heroIndex = -1;
         public override MapGeneratorDef MapGeneratorDef => campaignBeat >= 15
             ? DefDatabase<MapGeneratorDef>.GetNamed("Calido_ScriptoriumGround") : base.MapGeneratorDef;
 
@@ -14,12 +15,14 @@ namespace CalidoHomecoming
         {
             base.ExposeData();
             Scribe_Values.Look(ref campaignBeat, "campaignBeat", -1);
+            Scribe_Values.Look(ref heroIndex, "heroIndex", -1);
         }
 
         public override void PostMapGenerate()
         {
             base.PostMapGenerate();
-            Current.Game?.GetComponent<CalidoStoryState>()?.PopulateMissionSite(this, Map);
+            if (heroIndex >= 0) CalidoHeroEncounter.Populate(this, Map);
+            else Current.Game?.GetComponent<CalidoStoryState>()?.PopulateMissionSite(this, Map);
         }
     }
 }
