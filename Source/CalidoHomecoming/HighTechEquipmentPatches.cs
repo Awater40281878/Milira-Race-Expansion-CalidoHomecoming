@@ -37,4 +37,25 @@ namespace CalidoHomecoming
             return true;
         }
     }
+
+    // HasPartsToWear has no reason output. Relabel its disabled right-click
+    // option so the authorization restriction is not reported as an amputation.
+    [HarmonyPatch]
+    public static class HighTechWearReasonPatch
+    {
+        public static MethodBase TargetMethod() => AccessTools.Method(
+            AccessTools.TypeByName("RimWorld.FloatMenuOptionProvider_Wear"),
+            "GetSingleOptionFor", new[] { typeof(Thing), typeof(FloatMenuContext) });
+
+        public static void Postfix(Thing clickedThing, FloatMenuContext context, ref FloatMenuOption __result)
+        {
+            Pawn pawn = context?.FirstSelectedPawn;
+            CalidoStoryState state = Current.Game?.GetComponent<CalidoStoryState>();
+            if (__result == null || !__result.Disabled || state?.ScenarioEnabled != true ||
+                state.ArmorBlueprintUnlocked || !CalidoStoryState.IsMilira(pawn) ||
+                !CalidoStoryState.IsLockedMiliraTech(clickedThing?.def)) return;
+
+            __result.Label = "無法穿戴 " + clickedThing.LabelShort + "：尚未取得卡利多防具授權。";
+        }
+    }
 }

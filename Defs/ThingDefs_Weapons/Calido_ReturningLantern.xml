@@ -3,9 +3,9 @@
   <ThingDef ParentName="BaseWeapon">
     <defName>Calido_ReturningLantern</defName>
     <label>歸燈</label>
-    <description>白羽聖堂保存的唯一神器。一柄帶有崩口的單刃長柄薙刀，木柄纏著舊麻繩，柄尾嵌有被磨平的渡口銅印。它無法製造、沒有耐久度；只有米莉拉能喚醒全部力量。</description>
+    <description>白羽聖堂守護的唯一神器，由渡口長槍覺醒而來。黑灰色長柄嵌著白色結構，單刃與護手上浮現白銀與青色的紋路。它無法製造、沒有耐久度；只有米莉拉能喚醒全部力量。</description>
     <graphicData>
-      <texPath>Things/Item/Equipment/WeaponMelee/ReturningLantern</texPath>
+      <texPath>Things/Item/Equipment/WeaponMelee/ReturningLantern_TechGray</texPath>
       <graphicClass>Graphic_Single</graphicClass>
       <drawSize>(2.4,2.4)</drawSize>
     </graphicData>

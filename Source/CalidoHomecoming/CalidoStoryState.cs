@@ -93,6 +93,7 @@ namespace CalidoHomecoming
         private bool startingReachSpearGranted;
         private bool protagonistDeathLocked;
         private bool protagonistDeathAcknowledged;
+        private int startingGuideCompletedMask;
 
         public CalidoStoryState(Game game)
         {
@@ -100,6 +101,9 @@ namespace CalidoHomecoming
 
         public bool PrologueQueued => prologueQueued;
         public bool ScenarioEnabled => scenarioEnabled;
+        public bool IsProtagonist(Pawn pawn) => scenarioEnabled && pawn != null && protagonistId >= 0 && pawn.thingIDNumber == protagonistId;
+        public Pawn Protagonist => PawnsFinder.AllMapsCaravansAndTravellingTransporters_Alive_FreeColonists
+            .FirstOrDefault(IsProtagonist);
         public bool PrologueComplete => prologueComplete;
         public CalidoPrologueChoice PrologueChoice => prologueChoice;
         public bool FeatherEventComplete => featherEventComplete;
@@ -122,6 +126,7 @@ namespace CalidoHomecoming
         public int RescuedCaptives => rescuedCaptives;
         public int SlaveCaravanNotoriety => slaveCaravanNotoriety;
         public int HeroPersonalLinesCompleted => completedHeroPersonalLines?.Count ?? 0;
+        public int StartingGuideCompletedMask => startingGuideCompletedMask;
 
         public override void StartedNewGame()
         {
@@ -157,6 +162,7 @@ namespace CalidoHomecoming
             EnsureAuthorizationBlueprints();
             EnsureStartingReachSpear();
             EnsureProtagonistAura();
+            TickStartingGuide();
 
             if (messagePostQuestComplete)
             {
@@ -189,6 +195,26 @@ namespace CalidoHomecoming
 
             prologueQueued = true;
             Find.WindowStack.Add(new Dialog_BorrowedName(this));
+        }
+
+        private void TickStartingGuide()
+        {
+            if (!prologueComplete || Find.TickManager.TicksGame % 1200 != 0 || Find.AnyPlayerHomeMap == null) return;
+            bool[] progress = CalidoStartingGuide.Progress(Find.AnyPlayerHomeMap);
+            string[] titles = { "有屋頂的休息處", "遮雨的倉庫", "第一口熱食", "南渡的基礎設施" };
+            for (int i = 0; i < progress.Length; i++)
+            {
+                int bit = 1 << i;
+                if (!progress[i] || (startingGuideCompletedMask & bit) != 0) continue;
+                startingGuideCompletedMask |= bit;
+                Messages.Message("南渡初期指引完成：" + titles[i], MessageTypeDefOf.PositiveEvent, false);
+            }
+            if (startingGuideCompletedMask == 15 && (startingGuideCompletedMask & 16) == 0)
+            {
+                startingGuideCompletedMask |= 16;
+                Find.LetterStack.ReceiveLetter("南渡有了立足之處",
+                    "「有地方睡覺，有地方放糧食，也有能生火煮飯的地方了。謝謝妳們。」\n\n主角在留言冊寫下第一條生活記錄。南渡仍需要慢慢成長，但現在已有人願意在這裡停留。", LetterDefOf.PositiveEvent);
+            }
         }
 
         public void EnableScenario()
@@ -424,7 +450,7 @@ namespace CalidoHomecoming
             protagonist.equipment.AddEquipment((ThingWithComps)ThingMaker.MakeThing(spearDef, ThingDefOf.Steel));
             protagonistId = protagonist.thingIDNumber;
             startingReachSpearGranted = true;
-            Messages.Message("主角裝備了普通地面武器「渡口長槍」。它能在4.9格內延伸刺擊，也可用於狩獵。", protagonist, MessageTypeDefOf.PositiveEvent, false);
+            Messages.Message("主角裝備了普通地面近戰武器「渡口長槍」。", protagonist, MessageTypeDefOf.PositiveEvent, false);
         }
 
         public void NotifyProtagonistDeath(Pawn pawn)
@@ -462,6 +488,10 @@ namespace CalidoHomecoming
                 .FirstOrDefault(p => p.thingIDNumber == protagonistId);
             TraitDef aura = DefDatabase<TraitDef>.GetNamedSilentFail("Calido_ProtagonistAura");
             if (protagonist?.story?.traits == null || aura == null) return;
+
+            HediffDef cheese = DefDatabase<HediffDef>.GetNamedSilentFail("Calido_CheeseWheelGod");
+            if (cheese != null && !protagonist.health.hediffSet.HasHediff(cheese))
+                protagonist.health.AddHediff(cheese);
 
             if (!protagonist.story.traits.HasTrait(aura))
             {
@@ -1088,7 +1118,7 @@ namespace CalidoHomecoming
             protagonist.equipment.AddEquipment((ThingWithComps)ThingMaker.MakeThing(artifactDef));
             returningLanternGranted = true;
             returningLanternEvolutionReady = false;
-            Find.LetterStack.ReceiveLetter("歸燈覺醒", "主角手中的渡口長槍沒有被替換，而是在舊木柄與渡口銅印上長出了完整聖環、翼飾與青色核心。世界上只能存在這一把歸燈。", LetterDefOf.PositiveEvent, protagonist);
+            Find.LetterStack.ReceiveLetter("歸燈覺醒", "主角手中的渡口長槍保留了單刃輪廓，長柄轉為黑灰色，刀身和護手上浮現白銀與青色的紋路。世界上只能存在這一把歸燈。", LetterDefOf.PositiveEvent, protagonist);
         }
 
         private void TickTechnologyLock()
@@ -1132,6 +1162,25 @@ namespace CalidoHomecoming
         public static bool IsLockedMiliraTech(ThingDef def)
         {
             if (def == null || def.defName == "Calido_ReturningLantern") return false;
+            // Milira apparel shares an Ultra-tech parent, even for hats and
+            // clothing. Only explicitly identified combat armor needs clearance.
+            if (def.IsApparel)
+            {
+                switch (def.defName)
+                {
+                    case "Milira_ValkyrArmor":
+                    case "Milira_ValkyrHelmet":
+                    case "Milira_ArtemisArmor":
+                    case "Milira_ArtemisArmorII":
+                    case "Milira_ArtemisHelmet":
+                    case "Milira_DaedalusArmor":
+                    case "Milira_DaedalusHelmet":
+                    case "Milira_SpecOpsMobilityArmor":
+                        return true;
+                    default:
+                        return false;
+                }
+            }
             bool miliraNamed = def.defName.StartsWith("Milira_") || def.defName.StartsWith("Milian_");
             return miliraNamed && def.techLevel >= TechLevel.Spacer;
         }
@@ -1338,7 +1387,7 @@ namespace CalidoHomecoming
 
             Find.LetterStack.ReceiveLetter(
                 "南渡留言冊已開啟",
-                "渡口的人替你留下一本沒有寫滿的留言冊。從畫面下方的「南渡留言冊」可以重新閱讀序幕，並查看之後出現的地面委託。",
+                "「先找個能遮雨的地方，再想辦法生火。」\n\n渡口的人替你留下一本留言冊。點選畫面下方的「南渡留言冊」，查看初期建設指引、目前建築財富與之後的地面委託。",
                 LetterDefOf.NeutralEvent);
         }
 
@@ -1389,6 +1438,7 @@ namespace CalidoHomecoming
         public override void ExposeData()
         {
             Scribe_Values.Look(ref scenarioEnabled, "scenarioEnabled", false);
+            Scribe_Values.Look(ref startingGuideCompletedMask, "startingGuideCompletedMask", 0);
             Scribe_Values.Look(ref prologueQueued, "prologueQueued", false);
             Scribe_Values.Look(ref prologueComplete, "prologueComplete", false);
             Scribe_Values.Look(ref prologueStartTick, "prologueStartTick", -1);

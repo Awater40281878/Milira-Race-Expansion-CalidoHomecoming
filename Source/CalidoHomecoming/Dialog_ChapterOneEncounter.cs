@@ -42,7 +42,17 @@ namespace CalidoHomecoming
             CalidoPortraits.Draw(portraitRect, portraitPath, speaker, CalidoPortraits.GuessFemale(speaker));
             Rect textRect = new Rect(220f, 78f, inRect.width - 220f, 330f);
             Widgets.DrawMenuSection(textRect);
-            Widgets.Label(textRect.ContractedBy(20f), body);
+            string protagonistName = Current.Game?.GetComponent<CalidoStoryState>()?.Protagonist?.LabelShort;
+            string dialogue = body;
+            if (!string.IsNullOrEmpty(protagonistName))
+            {
+                dialogue = dialogue.Replace("你們", protagonistName + "一行人")
+                    .Replace("妳們", protagonistName + "一行人")
+                    .Replace("主角", protagonistName)
+                    .Replace("妳", protagonistName)
+                    .Replace("你", protagonistName);
+            }
+            Widgets.Label(textRect.ContractedBy(20f), dialogue);
 
             float width = (inRect.width - 20f) / choices.Length;
             for (int i = 0; i < choices.Length; i++)

@@ -27,6 +27,22 @@ namespace CalidoHomecoming
             Widgets.BeginScrollView(outer, ref scrollPosition, view);
 
             float y = 0f;
+            if (state?.PrologueComplete == true)
+            {
+                Map home = Find.AnyPlayerHomeMap;
+                int done = state.StartingGuideCompletedMask;
+                string shelter = (done & 1) != 0 ? "完成" : "待完成";
+                string storage = (done & 2) != 0 ? "完成" : "待完成";
+                string kitchen = (done & 4) != 0 ? "完成" : "待完成";
+                string wealth = (done & 8) != 0 ? "完成" : "待完成";
+                float currentWealth = home?.wealthWatcher?.WealthBuildings ?? 0f;
+                DrawEntry(view.width, ref y, "初期指引：在南渡落腳",
+                    $"[{shelter}] 休息處：建造有門牆及完整屋頂的房間，放入一張床。\n" +
+                    $"[{storage}] 倉庫：設置儲存區，至少一格位於完整屋頂的室內。可和其他房間共用。\n" +
+                    $"[{kitchen}] 備餐：建造營火、燃料爐或電爐。\n" +
+                    $"[{wealth}] 基礎設施：建築財富達到 {CalidoStartingGuide.BuildingWealthTarget:0} 銀，目前 {currentWealth:0} 銀。\n" +
+                    "木牆、門、床與基本設施都能逐步累積；各項可按任何順序完成。完成狀態約每遊戲 20 秒更新。");
+            }
             DrawEntry(view.width, ref y, "序幕：借來的名字", state?.PrologueComplete == true
                 ? "已完成。渡口替這名陌生的米莉拉留下了第一頁記錄。"
                 : "尚未完成。建立殖民地後，序幕會自動開始。");
@@ -106,7 +122,7 @@ namespace CalidoHomecoming
                 }
                 DrawEntry(view.width, ref y, "地面科技封鎖", state.CalidoTechUnlocked
                     ? "四類科技授權已完成，高階米莉拉裝備現可校準使用。"
-                    : $"仍在封鎖中。普通冷兵器與低階熱兵器不受影響；太空級米莉拉裝備會被自動卸下。\n民用：{Mark(state.CivilianBlueprintUnlocked)}　防具：{Mark(state.ArmorBlueprintUnlocked)}　武器：{Mark(state.WeaponBlueprintUnlocked)}　米莉安：{Mark(state.MilianBlueprintUnlocked)}");
+                    : $"仍在封鎖中。普通服飾、非高階戰鬥防具、普通冷兵器與低階熱兵器不受穿戴限制；指定的米莉拉高階戰甲與高科技武器需要授權。\n民用：{Mark(state.CivilianBlueprintUnlocked)}　防具：{Mark(state.ArmorBlueprintUnlocked)}　武器：{Mark(state.WeaponBlueprintUnlocked)}　米莉安：{Mark(state.MilianBlueprintUnlocked)}");
                 DrawEntry(view.width, ref y, "英雄個人記錄", $"已完成 {state.HeroPersonalLinesCompleted}/20 條。每位英雄加入後會在南渡提出一項個人委託；選擇會改變相關陣營好感與主線的救援／強硬傾向。");
             }
 
@@ -150,7 +166,7 @@ namespace CalidoHomecoming
             switch (choice)
             {
                 case CalidoPrologueChoice.GiveName:
-                    return "她留下了真名，沒有接受神明的稱號。記錄人把名字寫得很慢，像怕再次抄錯。";
+                    return "她說出記憶中隱約浮現的名字，並不確定那是否完整。記錄人把它寫在空白頁上。";
                 case CalidoPrologueChoice.BorrowName:
                     return "她暫時借用了渡口給的稱呼。那不是假名，而是一筆尚待本人補完的記錄。";
                 case CalidoPrologueChoice.RefuseName:

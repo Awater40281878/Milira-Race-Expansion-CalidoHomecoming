@@ -54,8 +54,6 @@ namespace CalidoHomecoming
         private static void Postfix(Verb_MeleeAttack __instance, bool __result)
         {
             if (!__result || !PolearmEffects.IsPolearm(__instance.EquipmentSource?.def)) return;
-            PolearmWeaponAnimation.Start(__instance.EquipmentSource, __instance.Caster.Position,
-                __instance.CurrentTarget.Cell, __instance.EquipmentSource.def.defName == "Calido_ReachSpear");
             PolearmEffects.Show(__instance.Caster?.Map, __instance.CurrentTarget.Cell, __instance.Caster.Position,
                 __instance.EquipmentSource.def.defName == "Calido_ReachSpear");
         }

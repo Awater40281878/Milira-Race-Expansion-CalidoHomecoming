@@ -13,7 +13,6 @@ namespace CalidoHomecoming
             if (target == null || target.Destroyed || !target.Spawned || target.Map != Caster.Map)
                 return false;
 
-            PolearmWeaponAnimation.Start(EquipmentSource, Caster.Position, target.Position, true);
             PolearmEffects.Show(target.Map, target.Position, Caster.Position, true);
             float accuracy = EquipmentSource?.GetStatValue(StatDefOf.AccuracyShort) ?? 0.88f;
             if (Rand.Value <= accuracy)
